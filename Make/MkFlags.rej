@@ -1,0 +1,10 @@
+--- Make/MkFlags      2017-03-01 15:33:01.298781385 +0000
++++ Make/MkFlags        2017-03-01 15:38:09.404287637 +0000
+@@ -35,6 +35,7 @@
+ #MACRO += -DTIMING_WITH_BARRIERS
+ #MACRO += -DAMALLOC_MEASURE
+ MACRO += -DMEASURE_FORCE
++#MACRO += -DREPROJECT_WFLOW
+ 
+ #Compiler
+ #export OMPI_CC = ccache gcc

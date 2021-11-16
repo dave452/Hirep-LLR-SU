@@ -1,0 +1,103 @@
+diff -Naur HiRep_SPN/Make/MkFlags HiRep_SPN_patch/Make/MkFlags
+--- HiRep_SPN/Make/MkFlags      2017-03-01 15:33:01.298781385 +0000
++++ HiRep_SPN_patch/Make/MkFlags        2017-03-01 15:38:09.404287637 +0000
+@@ -35,6 +35,7 @@
+ #MACRO += -DTIMING_WITH_BARRIERS
+ #MACRO += -DAMALLOC_MEASURE
+ MACRO += -DMEASURE_FORCE
++#MACRO += -DREPROJECT_WFLOW
+ 
+ #Compiler
+ #export OMPI_CC = ccache gcc
+diff -Naur HiRep_SPN/WilsonFlow/WF_measure_adaptative.c HiRep_SPN_patch/WilsonFlow/WF_measure_adaptative.c
+--- HiRep_SPN/WilsonFlow/WF_measure_adaptative.c        2017-03-01 15:33:01.670783204 +0000
++++ HiRep_SPN_patch/WilsonFlow/WF_measure_adaptative.c  2017-03-01 15:43:35.461881651 +0000
+@@ -248,6 +248,8 @@
+   lprintf("MAIN",0,"Gauge group: SU(%d)\n",NG);
+ #elif GAUGE_SON
+   lprintf("MAIN",0,"Gauge group: SO(%d)\n",NG);
++#elif GAUGE_SP4
++  lprintf("MAIN",0,"Gauge group: Sp(%d)\n",NG);
+ #else
+   lprintf("MAIN",0,"Default gauge group: SU(%d)\n",NG);
+ #endif
+diff -Naur HiRep_SPN/WilsonFlow/WF_measure.c HiRep_SPN_patch/WilsonFlow/WF_measure.c
+--- HiRep_SPN/WilsonFlow/WF_measure.c   2017-03-01 15:33:01.670783204 +0000
++++ HiRep_SPN_patch/WilsonFlow/WF_measure.c     2017-03-01 15:43:39.077899329 +0000
+@@ -244,6 +244,8 @@
+   lprintf("MAIN",0,"Gauge group: SU(%d)\n",NG);
+ #elif GAUGE_SON
+   lprintf("MAIN",0,"Gauge group: SO(%d)\n",NG);
++#elif GAUGE_SP4
++  lprintf("MAIN",0,"Gauge group: Sp(%d)\n",NG);
+ #else
+   lprintf("MAIN",0,"Default gauge group: SU(%d)\n",NG);
+ #endif
+diff -Naur HiRep_SPN/WilsonFlow/wilsonflow.c HiRep_SPN_patch/WilsonFlow/wilsonflow.c
+--- HiRep_SPN/WilsonFlow/wilsonflow.c   2017-03-01 15:33:01.670783204 +0000
++++ HiRep_SPN_patch/WilsonFlow/wilsonflow.c     2017-03-01 15:37:38.252135341 +0000
+@@ -413,6 +413,9 @@
+       *_4FIELD_AT(V,ix,mu)=utmp[1]; // V = exp(Z0/4) W0
+       _suNg_mul(*_4FIELD_AT(ws_gf_tmp,ix,mu),-4.,*_4FIELD_AT(ws_gf,ix,mu)); //ws_gf_tmp = -Z0
+       _suNg_mul(*_4FIELD_AT(ws_gf,ix,mu),-17./9.,*_4FIELD_AT(ws_gf,ix,mu)); //ws_gf =  -17*Z0/36 
++#if defined GAUGE_SP4 && defined REPROJECT_WFLOW
++      project_to_spNg(_4FIELD_AT(ws_gf, ix, mu));
++#endif
+     }
+   }
+   
+@@ -436,6 +439,9 @@
+       *_4FIELD_AT(V,ix,mu)=utmp[1];
+       *_4FIELD_AT(Vprime,ix,mu)=utmp[3];
+       _suNg_mul(*_4FIELD_AT(ws_gf,ix,mu),-1.,*_4FIELD_AT(ws_gf,ix,mu));
++#if defined GAUGE_SP4 && defined REPROJECT_WFLOW
++      project_to_spNg(_4FIELD_AT(ws_gf, ix, mu));
++#endif
+     }
+   }
+ 
+@@ -458,6 +464,9 @@
+       WF_Exp(&utmp[0],_4FIELD_AT(ws_gf,ix,mu));
+       _suNg_times_suNg(utmp[1],utmp[0],*_4FIELD_AT(V,ix,mu));
+       *_4FIELD_AT(V,ix,mu)=utmp[1];
++#if defined GAUGE_SP4 && defined REPROJECT_WFLOW
++      project_to_spNg(_4FIELD_AT(ws_gf, ix, mu));
++#endif
+     }
+   }
+ 
+@@ -515,10 +524,13 @@
+       _suNg_times_suNg(utmp[1],utmp[0],*_4FIELD_AT(V,ix,mu));
+       *_4FIELD_AT(V,ix,mu)=utmp[1];
+       _suNg_mul(*_4FIELD_AT(ws_gf,ix,mu),-17./9.,*_4FIELD_AT(ws_gf,ix,mu));
++#if defined GAUGE_SP4 && defined REPROJECT_WFLOW
++      project_to_spNg(_4FIELD_AT(ws_gf, ix, mu));
++#endif
+     }
+   }
+   
+-
++  
+   start_gf_sendrecv(V);
+   complete_gf_sendrecv(V);
+ #ifdef ROTATED_SF
+@@ -534,6 +546,9 @@
+       _suNg_times_suNg(utmp[1],utmp[0],*_4FIELD_AT(V,ix,mu));
+       *_4FIELD_AT(V,ix,mu)=utmp[1];
+       _suNg_mul(*_4FIELD_AT(ws_gf,ix,mu),-1.,*_4FIELD_AT(ws_gf,ix,mu));
++#if defined GAUGE_SP4 && defined REPROJECT_WFLOW
++      project_to_spNg(_4FIELD_AT(ws_gf, ix, mu));
++#endif
+     }
+   }
+ 
+@@ -552,6 +567,9 @@
+       WF_Exp(&utmp[0],_4FIELD_AT(ws_gf,ix,mu));
+       _suNg_times_suNg(utmp[1],utmp[0],*_4FIELD_AT(V,ix,mu));
+       *_4FIELD_AT(V,ix,mu)=utmp[1];
++#if defined GAUGE_SP4 && defined REPROJECT_WFLOW
++      project_to_spNg(_4FIELD_AT(ws_gf, ix, mu));
++#endif
+     }
+   }
+ 

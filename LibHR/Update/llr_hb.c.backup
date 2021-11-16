@@ -1,0 +1,125 @@
+/*************************************************************************** \
+ * Copyright (c) 2008, Claudio Pica                                          *   
+ * All rights reserved.                                                      * 
+\***************************************************************************/
+
+/*******************************************************************************
+ *
+ * File update_llr.c
+ *
+ * Update programs
+ *
+ *******************************************************************************/
+#include "suN.h"
+#include "utils.h"
+#include "global.h"
+#include "logger.h"
+#include "random.h"
+#include "communications.h"
+#include <math.h>
+#include "update.h"
+#include "observables.h"
+#include <stdlib.h>
+
+typedef struct {
+  int nrm,nth;
+  int it;
+  double starta;
+  double a;
+  double S0;
+  double dS;
+  double E;
+} llrparamshb;
+
+
+
+
+static llrparamshb llrp;
+
+//reset it to 0 and rhoa to initial value
+void restart_robbinsmonro_hb(){
+  llrp.it=8;
+  llrp.a=llrp.starta;
+  llrp.E=avr_plaquette()*6.0*GLB_VOLUME;
+}
+
+void init_robbinsmonro_hb(int nrm,int nth,double starta,int it,double dS,double S0){
+  llrp.nrm=nrm;
+  llrp.nth=nth;
+  llrp.it=it;
+  llrp.starta=starta;
+  llrp.dS=dS;
+  llrp.S0=S0;
+  llrp.E=avr_plaquette()*6.0*GLB_VOLUME;
+}
+
+double get_llr_a_hb(void){
+  return llrp.a;	
+}
+
+double getS0_hb(void){
+  return llrp.S0;	
+}
+
+  
+double getE(void){
+  return llrp.E;
+}
+
+
+void thermrobbinsmonro_hb(void){
+  double Emin=llrp.S0-llrp.dS*0.5;
+  double Emax=llrp.S0+llrp.dS*0.5;
+  double * E = &(llrp.E);
+  update_creutz(llrp.a,1,0, E, Emin, Emax);
+}
+
+void llr_fixed_a_update_hb(void){
+  double Emin=llrp.S0-llrp.dS*0.5;
+  double Emax=llrp.S0+llrp.dS*0.5;
+  double * E = &(llrp.E);
+  update_creutz(llrp.a,1,0, E, Emin, Emax);
+
+
+#ifdef WITH_UMBRELLA
+  umbrella_swap(&S_llr,&llrp.S0,&llrp.a,&llrp.dS);
+#endif
+}
+	
+void robbinsmonro_hb(void){
+  
+  int rmstep;
+    
+  double Emin=llrp.S0-llrp.dS*0.5;
+  double Emax=llrp.S0+llrp.dS*0.5;
+  double * E = &(llrp.E);
+  
+  for(rmstep=0;rmstep<llrp.nth;rmstep++){
+    lprintf("llr",30,"Therm: %d\n",rmstep);
+    update_creutz(llrp.a, 1, 0, E, Emin, Emax);
+
+  }
+  
+  
+  
+  
+  double avr=0.,delta_a;
+  for(rmstep=0;rmstep<llrp.nrm;rmstep++){
+    update_creutz(llrp.a, 1, 0, E, Emin, Emax);
+    //lprintf("ROBBINSMONRO",10,"RM Step: %d GMC Iter: %d \n",llrp.it,rmstep);
+    //printf(" E = %1.5f\n", llrp.E);
+    avr+=llrp.E;
+  }
+  
+  avr/=(double)llrp.nrm;
+
+  delta_a=(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it);
+  llrp.a+=delta_a;
+  //printf("a = %1.5f, <E-E0> = %f, delta_a = %f\n", llrp.a, avr-llrp.S0, delta_a);
+#ifdef WITH_UMBRELLA
+  umbrella_swap(&S_llr,&llrp.S0,&llrp.a,&llrp.dS);
+#endif
+  llrp.it++;
+}
+
+

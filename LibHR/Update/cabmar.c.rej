@@ -1,0 +1,40 @@
+--- LibHR/Update/cabmar.c  2017-03-06 14:43:05.000000000 +0000
++++ LibHR/Update/cabmar.c 2017-03-09 19:23:04.581367105 +0000
+@@ -124,13 +122,15 @@
+           fact=sqrt(wsq);
+           rho=b*fact;
+ 
+-#ifdef SYMPLECTIC
++#ifdef GAUGE_SP4
+ //#if NG==6
+ //#error "Program not ready for sp(Ng) with Ng>4 yet"
+ //#endif
+          //if(  (i == 0 && j == 1) || ( i == 0 && j == 2 ) || ( i == 1 && j == 2 ) || ( i == 3 && j == 5) || ( i == 3 && j == 4 ) || ( i == 4 && j ==5 ) ) rho *=2.;
+ 
+-         if( (i < NG/2 && j < NG/2) || ( i>=NG/2 && j > NG/2 )) rho *=2.;
++         if( (i < NG/2 && j < NG/2) || ( i>=NG/2 && j > NG/2 )) {
++           rho *=2.;
++         }
+ #endif          
+ 
+           random_su2(rho,r);
+@@ -143,7 +143,7 @@
+         }
+       } else;// random_su2(0.0,s);
+       
+-#ifdef SYMPLECTIC
++#ifdef GAUGE_SP4
+ //#if NG==6
+ //#error "Program not ready for sp(Ng) with Ng>4 yet"
+ //#endif
+@@ -160,7 +160,9 @@
+                s[1] *=-1.;
+                rotate(pu1-NG/2,pu2-NG/2,s);
+        //} else if( ( i == 0 && j == 3) || ( i == 2 && j == 5) || ( i == 1 && j == 4)) rotate(pu1,pu2,s) ;
+-       } else if( ( j == i + NG/2) ) rotate(pu1,pu2,s) ;
++       } else if( ( j == i + NG/2) ) {
++        rotate(pu1,pu2,s) ;
++       }
+        else ;
+ #else
+        rotate(pu1,pu2,s);
