@@ -176,21 +176,21 @@ int main(int argc,char *argv[]) {
   for(int j=0;j<flow.rmrestart;++j) {
     
     restart_robbinsmonro();  
-    
-    for (i=0;i<flow.therm;++i){
-      struct timeval start, end, etime; /* //for trajectory timing */
-      lprintf("MAIN",0,"Starting thermalization, thermalization steps = %d\n",flow.therm);
-      lprintf("MAIN",0,"Thermalization #%d...\n",i);
-      gettimeofday(&start,0);
-      
-      thermrobbinsmonro();
-      
-      gettimeofday(&end,0);
-      timeval_subtract(&etime,&end,&start);
-      lprintf("MAIN",0,"Thermalization sequence #%d: generated in [%ld sec %ld usec]\n",i,etime.tv_sec,etime.tv_usec);    
+    struct timeval start, end, etime; /* //for trajectory timing */
+    gettimeofday(&start,0);
+    for (i=0;i<flow.therm;++i){      
+      thermrobbinsmonro();    
+      if (flow.therm > 20)
+        {
+            if (i % (flow.therm / 5) == 0)
+                lprintf("MAIN", 0, "%d", ((i * 100) / flow.therm));
+            else if (i % (flow.therm / 20) == 0)
+                lprintf("MAIN", 0, ".");
+        } 
     }
-    
-    //lprintf("MAIN",0,"Thermalization done.\n");
+    gettimeofday(&end,0);
+    timeval_subtract(&etime,&end,&start);
+    lprintf("MAIN",0,"Thermalization done in [%ld sec %ld usec].\n", etime.tv_sec, etime.tv_usec);
     
 
     for(i=flow.start;i<flow.end;++i) {
@@ -200,18 +200,13 @@ int main(int argc,char *argv[]) {
       gettimeofday(&start,0);
       
      robbinsmonro();
-    //  
+     //Timing and output data
       gettimeofday(&end,0);
       timeval_subtract(&etime,&end,&start);
       lprintf("MAIN",0,"Robbins Monro sequence #%d: generated in [%ld sec %ld usec]\n",i,etime.tv_sec,etime.tv_usec);
       lprintf("MAIN",0,"Plaq a fixed %lf \n",avr_plaquette());    
-      lprintf("MAIN",0,"<a_rho(%d,%d,%lf)>= %f\n",j,i,getS0(),get_llr_a());
-    //  
-    //  
+      lprintf("MAIN",0,"<a_rho(%d,%d,%lf)>= %f\n",j,i,getS0(),get_llr_a());  
     }
-    //
-    //
-    //
     lprintf("MAIN",0,"Robins Monro update done.\n");
     for(i=0;i<200;++i) {
       struct timeval start, end, etime; /* //for trajectory timing */

@@ -1,3 +1,34 @@
+#Auto-generated files
+Include/.autoheaders.h
+Include/macro_opt.h
+Include/suN.h
+Include/suN_types.h
+Include/suN_repr_func.h
+Make/Utils/autosun/writeREPR
+LibHR/Update/approx_data.db
+LibHR/Utils/suN_exp.c
+
+#object, dependences, library and info files
+*.o
+*.d
+*.a
+**/cinfo.c
+**/.test_failed
+**/out_0
+**/err_0
+**/debug
+
+#configuration files for vscode
+.vscode
+**/.DS_Store
+**/SnoopDogg*
+Hirep-git.code-workspace
+# file related to code linting frameworks 
+.ccls-cache
+**/clangd
+.ycm_extra_conf.py*
+compile_commands.json
+
 /BARTONFINK
 /RUNLLR
 /SPLLR
