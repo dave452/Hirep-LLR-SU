@@ -29,4 +29,6 @@ llr:make = true
 llr:nmc = 500
 llr:nth = 200
 llr:it = 10
-
+llr:sfreq_RM = 2
+llr_sfreq_fxa = 200
+llr_nfxa = 0

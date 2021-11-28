@@ -25,7 +25,7 @@ void thermrobbinsmonro_hb(void);
 void measrobbinsmonro_hb(void);
 void robbinsmonro_hb(void);
 void restart_robbinsmonro_hb();
-void init_robbinsmonro_hb(int nrm,int nth,double starta,int it,double dS,double S0);
+void init_robbinsmonro_hb(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa);
 /*================*/
 
 
@@ -312,7 +312,7 @@ void thermrobbinsmonro(void);
 void measrobbinsmonro(void);
 void robbinsmonro(void);
 void restart_robbinsmonro();
-void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0);
+void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa);
 double getdS(void);
 double get_llr_a(void);
 double get_llr_a_hb(void);

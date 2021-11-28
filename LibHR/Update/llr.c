@@ -33,6 +33,8 @@ typedef struct {
 #ifdef LLRHB
   double E;
 #endif
+  int sfreq_fxa;
+  int sfreq_RM;
 } llrparams;
 
 static llrparams llrp;
@@ -43,13 +45,15 @@ void restart_robbinsmonro(){
   llrp.a=llrp.starta;
 }
 
-void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0){
+void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa){
   llrp.nrm=nrm;
   llrp.nth=nth;
   llrp.it=it;
   llrp.starta=starta;
   llrp.dS=dS;
   llrp.S0=S0;
+  llrp.sfreq_RM = sfreq_RM;
+  llrp.sfreq_fxa = sfreq_fxa;
 #ifdef LLRHB
   if(!initHB){  
   llrp.E = avr_plaquette()*GLB_VOLUME*6.;
@@ -96,7 +100,7 @@ void llr_fixed_a_update(void){
   double Emin, Emax; 
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
-  for( int i=0; i<200 ; i++) {
+  for( int i=0; i<llrp.sfreq_fxa ; i++) {
 	update_constrained(llrp.a, 1,0, &(llrp.E),Emin,Emax);
     	lprintf("ROBBINSMONRO",10,"Fixed a MC Step: %d E=%lf \n",i,llrp.E);
 	polyakov();
@@ -167,7 +171,7 @@ void robbinsmonro(void){
 #ifdef WITH_UMBRELLA
 #ifdef LLRHB
   //lprintf("ROBBINSMONRO",10,"Emin=%lf E=%lf Emax = %lf\n",Emin,llrp.E,Emax);
-  if( llrp.it%2 == 0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
+  if( llrp.it%llrp.sfreq_RM == 0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
  // if( rmstep%100 ==0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
 #else
   umbrella_swap(&S_llr,&llrp.S0,&llrp.a,&llrp.dS);
