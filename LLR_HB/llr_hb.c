@@ -37,9 +37,9 @@
 typedef struct _input_llr {
   char make[256];
   int nmc,nth,it, nfxa, sfreq_fxa, sfreq_RM;
-  double starta,S0,dS;
+  double starta,S0,dS, Smin, Smax;
   /* for the reading function */
-  input_record_t read[8];
+  input_record_t read[13];
 } input_llr;
 
 
@@ -53,6 +53,8 @@ typedef struct _input_llr {
     {"Robbins Monro startint iteration", "llr:it = %d", INT_T, &((varname).it)}, \
     {"Cental action", "llr:S0 = %lf", DOUBLE_T, &((varname).S0)}, \
     {"Delta S", "llr:dS = %lf", DOUBLE_T, &((varname).dS)}, \
+    {"Maximum S value for all replicas", "llr:Smax = %lf", DOUBLE_T, &((varname).Smax)}, \
+    {"Minimum S value for all replicas", "llr:Smin = %lf", DOUBLE_T, &((varname).Smin)}, \
     {"Swap frequency for RM ", "llr:sfreq_RM = %d", INT_T, &((varname).sfreq_RM)}, \
     {"Number of fixed a steps ", "llr:nfxa = %d", INT_T, &((varname).nfxa)}, \
     {"Swap frequency for fixed a interations ", "llr:sfreq_fxa = %d", INT_T, &((varname).sfreq_fxa)}, \
@@ -162,7 +164,10 @@ int main(int argc,char *argv[]) {
   lprintf("MAIN",0,"Swap frequency for RM %d\n",llr_var.sfreq_RM);
   lprintf("MAIN",0,"Number of fixed a steps %d\n",llr_var.nfxa);
   lprintf("MAIN",0,"Swap frequency for fixed a steps %d\n",llr_var.sfreq_fxa);
-  /* Init Monte Carlo */
+  lprintf("MAIN",0,"LLR Smin minimum action for all replicas %f\n",llr_var.Smin);
+  lprintf("MAIN",0,"LLR Smax maximum action for all replicas %f\n",llr_var.Smax);
+  lprintf("MAIN",0,"LLR Delta S %f\n",llr_var.dS);
+/* Init Monte Carlo */
 
   init_mc(&flow, input_filename);
   //lprintf("MAIN",0,"MVM during HMC initialzation: %ld\n",getMVM());
@@ -175,7 +180,7 @@ int main(int argc,char *argv[]) {
   //}
   
   //double E = avr_plaquette()*GLB_VOLUME*6.;
-  init_robbinsmonro(llr_var.nmc,llr_var.nth,llr_var.starta,llr_var.it,llr_var.dS,llr_var.S0,llr_var.sfreq_RM, llr_var.sfreq_fxa);
+  init_robbinsmonro(llr_var.nmc,llr_var.nth,llr_var.starta,llr_var.it,llr_var.dS,llr_var.S0,llr_var.sfreq_RM, llr_var.sfreq_fxa, llr_var.Smin, llr_var.Smax);
   
 
   for(int j=0;j<flow.rmrestart;++j) {
@@ -203,14 +208,13 @@ int main(int argc,char *argv[]) {
       struct timeval start, end, etime; /* //for trajectory timing */
       lprintf("MAIN",0,"Trajectory #%d...\n",i);
       gettimeofday(&start,0);
-      
-     robbinsmonro();
+      robbinsmonro();
      //Timing and output data
       gettimeofday(&end,0);
       timeval_subtract(&etime,&end,&start);
       lprintf("MAIN",0,"Robbins Monro sequence #%d: generated in [%ld sec %ld usec]\n",i,etime.tv_sec,etime.tv_usec);
       lprintf("MAIN",0,"Plaq a fixed %lf \n",avr_plaquette());    
-      lprintf("MAIN",0,"<a_rho(%d,%d,%lf)>= %f\n",j,i,getS0(),get_llr_a());  
+      lprintf("MAIN",0,"<a_rho(%d,%d,%.9f)>= %.9f\n",j,i,getS0(),get_llr_a());  
     }
     lprintf("MAIN",0,"Robins Monro update done.\n");
     for(i=0;i<llr_var.nfxa;++i) {

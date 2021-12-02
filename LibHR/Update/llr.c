@@ -32,6 +32,8 @@ typedef struct {
   double dS;
 #ifdef LLRHB
   double E;
+  double Smin;
+  double Smax;
 #endif
   int sfreq_fxa;
   int sfreq_RM;
@@ -41,11 +43,11 @@ static llrparams llrp;
 
 //reset it to 0 and rhoa to initial value
 void restart_robbinsmonro(){
-  llrp.it=8;
+ //llrp.it=8;
   llrp.a=llrp.starta;
 }
 
-void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa){
+void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa, double Smin, double Smax){
   llrp.nrm=nrm;
   llrp.nth=nth;
   llrp.it=it;
@@ -55,6 +57,8 @@ void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0,
   llrp.sfreq_RM = sfreq_RM;
   llrp.sfreq_fxa = sfreq_fxa;
 #ifdef LLRHB
+  llrp.Smin = Smin;
+  llrp.Smax = Smax;
   if(!initHB){  
   llrp.E = avr_plaquette()*GLB_VOLUME*6.;
   lprintf("MAIN",0,"Bringing the system to the interval (S0,dS) = (%f, %f) ...\n", llrp.S0, llrp.dS);
@@ -88,6 +92,14 @@ void thermrobbinsmonro(void){
   double Emin, Emax; 
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
+#ifdef WITH_UMBRELLA
+  if(llrp.S0 == llrp.Smin){
+    Emin = 0;
+  }
+  if(llrp.S0 == llrp.Smax){
+    Emax = 6*GLB_VOLUME;
+  }
+#endif
   update_constrained(llrp.a, 1,0, &(llrp.E),Emin,Emax);
 #else
   double S_llr,S_non_llr;
@@ -100,6 +112,14 @@ void llr_fixed_a_update(void){
   double Emin, Emax; 
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
+#ifdef WITH_UMBRELLA
+  if(llrp.S0 == llrp.Smin){
+    Emin = 0;
+  }
+  if(llrp.S0 == llrp.Smax){
+    Emax = 6*GLB_VOLUME;
+  }
+#endif
   for( int i=0; i<llrp.sfreq_fxa ; i++) {
 	update_constrained(llrp.a, 1,0, &(llrp.E),Emin,Emax);
     	lprintf("ROBBINSMONRO",10,"Fixed a MC Step: %d E=%lf \n",i,llrp.E);
@@ -128,6 +148,14 @@ void robbinsmonro(void){
   double Emin, Emax;
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
+#ifdef WITH_UMBRELLA
+  if(llrp.S0 == llrp.Smin){
+    Emin = 0;
+  }
+  if(llrp.S0 == llrp.Smax){
+    Emax = 6*GLB_VOLUME;
+  }
+#endif
 #else
   double S_llr;
   double S_non_llr;
@@ -165,9 +193,19 @@ void robbinsmonro(void){
   }
   
   avr/=(double)llrp.nrm;
+#ifdef WITH_UMBRELLA
+  if((llrp.S0 == llrp.Smin)||(llrp.S0 == llrp.Smax)){
+    lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,0.);
+  }
+  else{
+    lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it) );
+    llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it);
+  }
+#else  
   lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it) );
   //llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS);
   llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it);
+#endif
 #ifdef WITH_UMBRELLA
 #ifdef LLRHB
   //lprintf("ROBBINSMONRO",10,"Emin=%lf E=%lf Emax = %lf\n",Emin,llrp.E,Emax);
@@ -320,11 +358,11 @@ void swap(double *data){
 
 
 void setreplica(double *data){
-  lprintf("llr:setreplica",0,"Updating OLD LLR Param: S0 %lf,  a  %lf , dS %lf  \n",llrp.S0,llrp.a,llrp.dS);
+  lprintf("llr:setreplica",0,"Updating OLD LLR Param: S0 %lf,  a  %.9f , dS %lf  \n",llrp.S0,llrp.a,llrp.dS);
   llrp.S0=data[1];
   llrp.dS=data[3];
   llrp.a=data[2];
-  lprintf("llr:setreplica",0,"New LLR Param: S0 %lf,  a  %lf , dS %lf  \n",llrp.S0,llrp.a,llrp.dS);
+  lprintf("llr:setreplica",0,"New LLR Param: S0 %lf,  a  %.9f , dS %lf  \n",llrp.S0,llrp.a,llrp.dS);
   
 }
 

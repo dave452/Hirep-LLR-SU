@@ -166,9 +166,9 @@ void update_constrained(double beta,int nhb,int nor, double * S, double Smin, do
     update_all(beta,0, S, Smin, Smax);
   }
 
- // for (int n=0;n<nor;n++){
-  //  update_all(beta,1);
- // }
+ for (int n=0;n<nor;n++){
+   update_all(beta,1, S, Smin, Smax);
+ }
 
   start_gf_sendrecv(u_gauge);
  
