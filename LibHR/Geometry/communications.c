@@ -1,6 +1,6 @@
 /***************************************************************************\
- * Copyright (c) 2008, Claudio Pica                                          *   
- * All rights reserved.                                                      * 
+ * Copyright (c) 2008, Claudio Pica                                          *
+ * All rights reserved.                                                      *
  \***************************************************************************/
 
 #include "global.h"
@@ -32,12 +32,12 @@ void global_sum(double *d, int n) {
 
 #ifdef MPI_TIMING
   struct timeval start, end, etime;
-  gettimeofday(&start,0);  
+  gettimeofday(&start,0);
 #endif
-  
+
   mpiret=MPI_Allreduce(d,pres,n,MPI_DOUBLE,MPI_SUM,GLB_COMM);
 
-  
+
 #ifdef MPI_TIMING
   gettimeofday(&end,0);
   timeval_subtract(&etime,&end,&start);
@@ -53,9 +53,9 @@ void global_sum(double *d, int n) {
     error(1,1,"global_sum " __FILE__,"Cannot perform global_sum");
   }
 #endif
-  while(n>0) { 
+  while(n>0) {
     --n;
-    d[n]=pres[n];	
+    d[n]=pres[n];
   }
 #else
   /* for non mpi do nothing */
@@ -72,12 +72,12 @@ void global_sum_int(int *d, int n) {
 
 #ifdef MPI_TIMING
   struct timeval start, end, etime;
-  gettimeofday(&start,0);  
+  gettimeofday(&start,0);
 #endif
-  
+
   mpiret=MPI_Allreduce(d,pres,n,MPI_INT,MPI_SUM,GLB_COMM);
 
-  
+
 #ifdef MPI_TIMING
   gettimeofday(&end,0);
   timeval_subtract(&etime,&end,&start);
@@ -93,9 +93,9 @@ void global_sum_int(int *d, int n) {
     error(1,1,"global_sum_int " __FILE__,"Cannot perform global_sum");
   }
 #endif
-  while(n>0) { 
+  while(n>0) {
     --n;
-    d[n]=pres[n];	
+    d[n]=pres[n];
   }
 #else
   /* for non mpi do nothing */
@@ -112,12 +112,12 @@ void global_max(double *d, int n) {
 
 #ifdef MPI_TIMING
   struct timeval start, end, etime;
-  gettimeofday(&start,0);  
+  gettimeofday(&start,0);
 #endif
-  
+
   mpiret=MPI_Allreduce(d,pres,n,MPI_DOUBLE,MPI_MAX,GLB_COMM);
 
-  
+
 #ifdef MPI_TIMING
   gettimeofday(&end,0);
   timeval_subtract(&etime,&end,&start);
@@ -133,9 +133,9 @@ void global_max(double *d, int n) {
     error(1,1,"global_max " __FILE__,"Cannot perform global_sum");
   }
 #endif
-  while(n>0) { 
+  while(n>0) {
     --n;
-    d[n]=pres[n];	
+    d[n]=pres[n];
   }
 #else
   /* for non mpi do nothing */
@@ -150,7 +150,7 @@ void bcast(double *d, int n) {
 
 #ifdef MPI_TIMING
   struct timeval start, end, etime;
-  gettimeofday(&start,0);  
+  gettimeofday(&start,0);
 #endif
 
   mpiret=MPI_Bcast(d, n, MPI_DOUBLE, 0,GLB_COMM);
@@ -184,7 +184,7 @@ void bcast_int(int *i, int n) {
 
 #ifdef MPI_TIMING
   struct timeval start, end, etime;
-  gettimeofday(&start,0);  
+  gettimeofday(&start,0);
 #endif
 
   mpiret=MPI_Bcast(i, n, MPI_INT, 0,GLB_COMM);
@@ -221,7 +221,7 @@ static void sync_gauge_field(suNg_field *gf) {
   for(i=0; i<gd->ncopies_gauge; ++i) {
     /* this assumes that the 4 directions are contiguous in memory !!! */
     memcpy(((gf->ptr)+4*gd->copy_to[i]),((gf->ptr)+4*gd->copy_from[i]),4*(gd->copy_len[i])*sizeof(*(gf->ptr)));
-    /*   
+    /*
          for(j=0; j<gd->copy_len[i]; j++) {
          x=gd->copy_from[i]+j;
          y=gd->copy_to[i]+j;
@@ -264,7 +264,7 @@ static void sync_gauge_transf(suNg_field *gf) {
  * Values:
  * 0 => No communications pending
  *
- */ 
+ */
 /* static unsigned int comm_status=0; */
 
 void complete_gf_sendrecv(suNg_field *gf) {
@@ -287,9 +287,9 @@ void complete_gf_sendrecv(suNg_field *gf) {
         if (status[k].MPI_ERROR != MPI_SUCCESS) {
           MPI_Error_string(status[k].MPI_ERROR,mesg,&mesglen);
           lprintf("MPI",0,"Req [%d] Source [%d] Tag [%] ERROR: %s\n",
-              k, 
-              status[k].MPI_SOURCE, 
-              status[k].MPI_TAG, 
+              k,
+              status[k].MPI_SOURCE,
+              status[k].MPI_TAG,
               mesg);
         }
       }
@@ -327,7 +327,7 @@ void start_gf_sendrecv(suNg_field *gf) {
 
 #ifdef MPI_TIMING
   error(gf_control>0,1,"start_gf_sendrecv " __FILE__,"Multiple send without receive");
-  gettimeofday(&gfstart,0);  
+  gettimeofday(&gfstart,0);
   gf_control=1;
 #endif
 
@@ -372,11 +372,11 @@ void start_gf_sendrecv(suNg_field *gf) {
 
 
     /*
-      if shifted 
+      if shifted
       force complete field transfer.
 
       shift field
-      
+
       (for test write 0 in the remaining missed buffer)
 
 
@@ -392,7 +392,7 @@ for(n[2]=0;n[2]<Y+2*Y_BORDER;n[2]++)
 for(n[3]=0;n[3]<Z+2*Z_BORDER;n[3]++)
 n[0]=0
 
-sono fuori se 
+sono fuori se
 n[1]+SHIFT_X==X+2*X_BORDER && X_BORDER!=0
 or
 n[2]+SHIFT_Y==Y+2*Y_BORDER && Y_BORDER!=0
@@ -458,9 +458,9 @@ void complete_sf_sendrecv(spinor_field *sf) {
         if (status[k].MPI_ERROR != MPI_SUCCESS) {
           MPI_Error_string(status[k].MPI_ERROR,mesg,&mesglen);
           lprintf("MPI",0,"Req [%d] Source [%d] Tag [%] ERROR: %s\n",
-              k, 
-              status[k].MPI_SOURCE, 
-              status[k].MPI_TAG, 
+              k,
+              status[k].MPI_SOURCE,
+              status[k].MPI_TAG,
               mesg);
         }
       }
@@ -497,7 +497,7 @@ void start_sf_sendrecv(spinor_field *sf) {
   sync_spinor_field(sf);
 #ifdef MPI_TIMING
   error(sf_control>0,1,"start_sf_sendrecv " __FILE__,"Multiple send without receive");
-  gettimeofday(&sfstart,0);  
+  gettimeofday(&sfstart,0);
   sf_control=1;
 #endif
 
@@ -566,9 +566,9 @@ void complete_gt_sendrecv(suNg_field *gf) {
         if (status[k].MPI_ERROR != MPI_SUCCESS) {
           MPI_Error_string(status[k].MPI_ERROR,mesg,&mesglen);
           lprintf("MPI",0,"Req [%d] Source [%d] Tag [%] ERROR: %s\n",
-              k, 
-              status[k].MPI_SOURCE, 
-              status[k].MPI_TAG, 
+              k,
+              status[k].MPI_SOURCE,
+              status[k].MPI_TAG,
               mesg);
         }
       }
@@ -582,7 +582,7 @@ void complete_gt_sendrecv(suNg_field *gf) {
 
 void start_gt_sendrecv(suNg_field *gf) {
 #ifdef WITH_MPI
-  int i, mpiret; 
+  int i, mpiret;
   (void)mpiret; // Remove warning of variable set but not used
   geometry_descriptor *gd=gf->type;
 
@@ -640,6 +640,7 @@ void start_gt_sendrecv(suNg_field *gf) {
 
 
 #ifdef WITH_UMBRELLA
+#ifndef LLRHB_UM_BC
 void umbrella_swap(double* S_llr,double* S0, double* a, double* dS)
 {
 
@@ -647,18 +648,18 @@ void umbrella_swap(double* S_llr,double* S0, double* a, double* dS)
   int mpiret; (void)mpiret;
 
   lprintf("SWAP",10,"Starting Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
-   
+
   /*wait on every processor*/
   mpiret=MPI_Barrier(MPI_COMM_WORLD);
   double data[4*N_REP];
   double locdata[4];
-  
+
   locdata[0]=*S_llr;
   locdata[1]=*S0;
   locdata[2]=*a;
   locdata[3]=*dS;
   if(PID==0) {
-    mpiret=MPI_Gather(locdata,4,MPI_DOUBLE,data,4,MPI_DOUBLE,0,UMB_WORLD); 
+    mpiret=MPI_Gather(locdata,4,MPI_DOUBLE,data,4,MPI_DOUBLE,0,UMB_WORLD);
 #ifndef NDEBUG
     if (mpiret != MPI_SUCCESS) {
       char mesg[MPI_MAX_ERROR_STRING];
@@ -668,7 +669,7 @@ void umbrella_swap(double* S_llr,double* S0, double* a, double* dS)
       error(1,1,"umbrella_swap " __FILE__,"Cannot complete gather");
     }
 #endif
-    if(UID==0) swap(data);      
+    if(UID==0) swap(data);
     mpiret=MPI_Scatter(data,4,MPI_DOUBLE,locdata,4,MPI_DOUBLE,0,UMB_WORLD);
 #ifndef NDEBUG
     if (mpiret != MPI_SUCCESS) {
@@ -679,7 +680,7 @@ void umbrella_swap(double* S_llr,double* S0, double* a, double* dS)
       error(1,1,"umbrella_swap " __FILE__,"Cannot complete scatter");
     }
 #endif
-    
+
   }
   bcast(locdata,4);
   setreplica(locdata);
@@ -687,52 +688,53 @@ void umbrella_swap(double* S_llr,double* S0, double* a, double* dS)
   lprintf("SWAP",10,"New Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
 
 }
+#else
+void umbrella_swap(double* S_llr,double* S0, double* a, double* dS, double* var_llr)
+{
 
-//void umbrella_swap_hb(double* S_llr,double* S0, double* a, double* dS)
-//{
-//
-//
-//  int mpiret; (void)mpiret;
-//
-//  lprintf("SWAP",10,"Starting Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
-//   
-//  /*wait on every processor*/
-//  mpiret=MPI_Barrier(MPI_COMM_WORLD);
-//  double data[4*N_REP];
-//  double locdata[4];
-//  
-//  locdata[0]=*S_llr;
-//  locdata[1]=*S0;
-//  locdata[2]=*a;
-//  locdata[3]=*dS;
-//  if(PID==0) {
-//    mpiret=MPI_Gather(locdata,4,MPI_DOUBLE,data,4,MPI_DOUBLE,0,UMB_WORLD); 
-//#ifndef NDEBUG
-//    if (mpiret != MPI_SUCCESS) {
-//      char mesg[MPI_MAX_ERROR_STRING];
-//      int mesglen;
-//      MPI_Error_string(mpiret,mesg,&mesglen);
-//      lprintf("MPI",0,"ERROR: %s\n",mesg);
-//      error(1,1,"umbrella_swap " __FILE__,"Cannot complete gather");
-//    }
-//#endif
-//    if(UID==0 ) swap_hb(data);      
-//    mpiret=MPI_Scatter(data,4,MPI_DOUBLE,locdata,4,MPI_DOUBLE,0,UMB_WORLD);
-//#ifndef NDEBUG
-//    if (mpiret != MPI_SUCCESS) {
-//      char mesg[MPI_MAX_ERROR_STRING];
-//      int mesglen;
-//      MPI_Error_string(mpiret,mesg,&mesglen);
-//      lprintf("MPI",0,"ERROR: %s\n",mesg);
-//      error(1,1,"umbrella_swap " __FILE__,"Cannot complete scatter");
-//    }
-//#endif
-//    
-//  }
-//  bcast(locdata,4);
-//  setreplica_hb(locdata);
-//
-//  lprintf("SWAP",10,"New Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
-//
-//}
+
+  int mpiret; (void)mpiret;
+
+  lprintf("SWAP",10,"Starting Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
+
+  /*wait on every processor*/
+  mpiret=MPI_Barrier(MPI_COMM_WORLD);
+  double data[5*N_REP];
+  double locdata[5];
+
+  locdata[0]=*S_llr;
+  locdata[1]=*S0;
+  locdata[2]=*a;
+  locdata[3]=*dS;
+  locdata[4]=*var_llr;
+  if(PID==0) {
+    mpiret=MPI_Gather(locdata,5,MPI_DOUBLE,data,5,MPI_DOUBLE,0,UMB_WORLD);
+#ifndef NDEBUG
+    if (mpiret != MPI_SUCCESS) {
+      char mesg[MPI_MAX_ERROR_STRING];
+      int mesglen;
+      MPI_Error_string(mpiret,mesg,&mesglen);
+      lprintf("MPI",0,"ERROR: %s\n",mesg);
+      error(1,1,"umbrella_swap " __FILE__,"Cannot complete gather");
+    }
+#endif
+    if(UID==0) swap(data);
+    mpiret=MPI_Scatter(data,5,MPI_DOUBLE,locdata,5,MPI_DOUBLE,0,UMB_WORLD);
+#ifndef NDEBUG
+    if (mpiret != MPI_SUCCESS) {
+      char mesg[MPI_MAX_ERROR_STRING];
+      int mesglen;
+      MPI_Error_string(mpiret,mesg,&mesglen);
+      lprintf("MPI",0,"ERROR: %s\n",mesg);
+      error(1,1,"umbrella_swap " __FILE__,"Cannot complete scatter");
+    }
+#endif
+
+  }
+  bcast(locdata,5);
+  setreplica(locdata);
+
+  lprintf("SWAP",10,"New Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
+
+}
 #endif //WITH_UMBRELLA
