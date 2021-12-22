@@ -127,7 +127,12 @@ void llr_fixed_a_update(void){
 	}
 #ifdef WITH_UMBRELLA
   lprintf("ROBBINSMONRO",10,"Fixed a Swap : %d E=%lf \n",llrp.E);
+#ifndef LLRHB_UM_BC
   umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
+#else
+  double var_llr = 0.;
+  umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS, &var_llr);
+#endif
 #endif
 #else
   double S_llr,S_non_llr;
@@ -314,10 +319,16 @@ void swap(double *data){
 
   //sorting with respect of the difference in hamiltonian between r and r+1 where r is the replica
 #ifdef LLRHB_UM_BC
-  drep[0].a = drep[1].a - (drep[1].dS / drep[1].var_llr)
-  drep[N_REP-1].a = drep[N_REP-2].a + (drep[N_REP-2].dS / drep[N_REP-2].var_llr)
-  lprintf("Boundary", 10, "a(1)_bc : %lf and a(1)_rm : %lf \n",drep[1].a,drep[2].a - (drep[2].dS / drep[2].var_llr));
-  lprintf("Boundary", 10, "a(n-2)_bc : %lf and a(n-2)_rm : %lf \n",drep[N_REP-2].a,drep[N_REP-3].a + (drep[N_REP-3].dS / drep[N_REP-3].var_llr));
+  if(drep[1].var_llr != 0.){
+	drep[0].a = drep[1].a - (drep[1].dS / (drep[1].var_llr*2));
+	data[5*drep[0].rep+2]=drep[0].a;
+  }
+  if(drep[N_REP-1].var_llr != 0.){
+ 	drep[N_REP-1].a = drep[N_REP-2].a + (drep[N_REP-2].dS / (drep[N_REP-2].var_llr*2));
+	data[5*drep[N_REP-1].rep+2]=drep[N_REP-1].a;  
+  }
+  if(drep[2].var_llr != 0.) lprintf("Boundary", 10, "a(1)_rm : %lf and a(1)_bc : %lf \n",drep[1].a,drep[2].a - (drep[2].dS / (drep[2].var_llr*2)));
+  if(drep[N_REP-3].var_llr != 0.) lprintf("Boundary", 10, "a(n-2)_rm : %lf and a(n-2)_bc : %lf \n",drep[N_REP-2].a,drep[N_REP-3].a + (drep[N_REP-3].dS /( drep[N_REP-3].var_llr*2)));  
 #endif
   for(i=0;i<N_REP-1;i++){
     drep[i].repnext=drep[i+1].rep;

@@ -737,4 +737,5 @@ void umbrella_swap(double* S_llr,double* S0, double* a, double* dS, double* var_
   lprintf("SWAP",10,"New Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
 
 }
+#endif
 #endif //WITH_UMBRELLA
