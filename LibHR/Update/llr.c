@@ -191,7 +191,7 @@ void robbinsmonro(void){
     update_constrained(llrp.a, llrp.nhb,llrp.nor,&(llrp.E),Emin,Emax);
     avr += llrp.E;
 #ifdef LLRHB_UM_BC
-    avr2 += llrp.E * llrp.E;
+    avr2 += (llrp.E * llrp.E);
 #endif
     //lprintf("ROBBINSMONRO",10,"RM Step: %d GMC Iter: %d E=%lf \n",llrp.it,rmstep,llrp.E);
     //if( rmstep%100 ==0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);

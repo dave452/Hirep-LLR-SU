@@ -162,7 +162,7 @@ int main(int argc,char *argv[]) {
   lprintf("MAIN",0,"LLR RM start value iteration %d\n",llr_var.it);
   lprintf("MAIN",0,"LLR S0 Central action %f\n",llr_var.S0);
   lprintf("MAIN",0,"LLR Delta S %f\n",llr_var.dS);
-  lprintf("MAIN",0,"Swap frequency for RM %d\n",llr_var.sfreq_RM);
+  lprintf("MAIN",0,"Number of heatbath steps %d, number of overrelaxation steps %d\n",llr_var.nhb,llr_var.nor);
   lprintf("MAIN",0,"Number of fixed a steps %d\n",llr_var.nfxa);
   lprintf("MAIN",0,"Swap frequency for fixed a steps %d\n",llr_var.sfreq_fxa);
   lprintf("MAIN",0,"LLR Smin minimum action for all replicas %f\n",llr_var.Smin);
