@@ -1,6 +1,6 @@
 /****************************************************************************
-* Copyright (c) 2008, Claudio Pica                                          *   
-* All rights reserved.                                                      * 
+* Copyright (c) 2008, Claudio Pica                                          *
+* All rights reserved.                                                      *
 \***************************************************************************/
 
 /*******************************************************************************
@@ -36,10 +36,10 @@
 /* LLR parameters */
 typedef struct _input_llr {
   char make[256];
-  int nmc,nth,it, nfxa, sfreq_fxa, sfreq_RM;
+  int nmc,nth,it, nfxa, sfreq_fxa, nhb, nor;
   double starta,S0,dS, Smin, Smax;
   /* for the reading function */
-  input_record_t read[13];
+  input_record_t read[14];
 } input_llr;
 
 
@@ -55,13 +55,14 @@ typedef struct _input_llr {
     {"Delta S", "llr:dS = %lf", DOUBLE_T, &((varname).dS)}, \
     {"Maximum S value for all replicas", "llr:Smax = %lf", DOUBLE_T, &((varname).Smax)}, \
     {"Minimum S value for all replicas", "llr:Smin = %lf", DOUBLE_T, &((varname).Smin)}, \
-    {"Swap frequency for RM ", "llr:sfreq_RM = %d", INT_T, &((varname).sfreq_RM)}, \
     {"Number of fixed a steps ", "llr:nfxa = %d", INT_T, &((varname).nfxa)}, \
     {"Swap frequency for fixed a interations ", "llr:sfreq_fxa = %d", INT_T, &((varname).sfreq_fxa)}, \
+    {"Number of heatbath steps per MC step ", "nhb = %d", INT_T, &((varname).nhb)}, \
+    {"Number of heatbath steps per MC step ", "nor = %d", INT_T, &((varname).nor)}, \
     {NULL, NULL, 0, NULL}				\
     }\
 }
- 
+
 input_llr llr_var=init_input_llr(llr_var);
 
 pg_flow flow=init_pg_flow(flow);
@@ -99,15 +100,15 @@ int main(int argc,char *argv[]) {
   char sbuf[128];
   int i;
   read_cmdline(argc,argv);
-  
+
   /* setup process communications */
   setup_process(&argc,&argv);
-  
+
   /* read global variables file */
   read_input(glb_var.read,input_filename);
-  
+
   setup_replicas();
-  
+
   /* logger setup */
   read_input(logger_var.read,input_filename);
   logger_set_input(&logger_var);
@@ -119,17 +120,17 @@ int main(int argc,char *argv[]) {
     error(stderrp==NULL,1,"main [hmc.c]",
 	  "Cannot redirect the stderr");
   }
-  
+
   lprintf("MAIN",0,"Compiled with macros: %s\n",MACROS);
   lprintf("MAIN",0,"[RepID: %d][world_size: %d]\n[MPI_ID: %d][MPI_size: %d]\n",RID,WORLD_SIZE,MPI_PID,MPI_WORLD_SIZE);
   lprintf("MAIN",0,"SVN Revision: %d\n", CI_svnrevision);
 
   lprintf("MAIN",0,"Logger lelvel: %d\n",logger_getlevel(0));
-  
+
   /* setup lattice geometry */
   if (geometry_init() == 1) { finalize_process(); return 0; }
   geometry_mpi_eo();
-  /* test_geometry_mpi_eo(); */ 
+  /* test_geometry_mpi_eo(); */
 
   /* setup random numbers */
   read_input(rlx_var.read,input_filename);
@@ -178,33 +179,33 @@ int main(int argc,char *argv[]) {
   //       //update(2.4,1,0);
   //       //printf(" E= %1.8e, %f\n", avr_plaquette(), avr_plaquette()*6.0*GLB_VOLUME);
   //}
-  
+
   //double E = avr_plaquette()*GLB_VOLUME*6.;
-  init_robbinsmonro(llr_var.nmc,llr_var.nth,llr_var.starta,llr_var.it,llr_var.dS,llr_var.S0,llr_var.sfreq_RM, llr_var.sfreq_fxa, llr_var.Smin, llr_var.Smax);
-  
+  init_robbinsmonro(llr_var.nmc,llr_var.nth,llr_var.starta,llr_var.it,llr_var.dS,llr_var.S0,llr_var.sfreq_fxa, llr_var.Smin, llr_var.Smax,llr_var.nhb,llr_var.nor);
+
 
   for(int j=0;j<flow.rmrestart;++j) {
-    
-    restart_robbinsmonro();  
+
+    restart_robbinsmonro();
     struct timeval start, end, etime; /* //for trajectory timing */
     gettimeofday(&start,0);
-    for (i=0;i<flow.therm;++i){      
-      thermrobbinsmonro();    
+    for (i=0;i<flow.therm;++i){
+      thermrobbinsmonro();
       if (flow.therm > 20)
         {
             if (i % (flow.therm / 5) == 0)
                 lprintf("MAIN", 0, "%d", ((i * 100) / flow.therm));
             else if (i % (flow.therm / 20) == 0)
                 lprintf("MAIN", 0, ".");
-        } 
+        }
     }
     gettimeofday(&end,0);
     timeval_subtract(&etime,&end,&start);
     lprintf("MAIN",0,"Thermalization done in [%ld sec %ld usec].\n", etime.tv_sec, etime.tv_usec);
-    
+
 
     for(i=flow.start;i<flow.end;++i) {
-      
+
       struct timeval start, end, etime; /* //for trajectory timing */
       lprintf("MAIN",0,"Trajectory #%d...\n",i);
       gettimeofday(&start,0);
@@ -213,15 +214,15 @@ int main(int argc,char *argv[]) {
       gettimeofday(&end,0);
       timeval_subtract(&etime,&end,&start);
       lprintf("MAIN",0,"Robbins Monro sequence #%d: generated in [%ld sec %ld usec]\n",i,etime.tv_sec,etime.tv_usec);
-      lprintf("MAIN",0,"Plaq a fixed %lf \n",avr_plaquette());    
-      lprintf("MAIN",0,"<a_rho(%d,%d,%.9f)>= %.9f\n",j,i,getS0(),get_llr_a());  
+      lprintf("MAIN",0,"Plaq a fixed %lf \n",avr_plaquette());
+      lprintf("MAIN",0,"<a_rho(%d,%d,%.9f)>= %.9f\n",j,i,getS0(),get_llr_a());
     }
     lprintf("MAIN",0,"Robins Monro update done.\n");
     for(i=0;i<llr_var.nfxa;++i) {
       struct timeval start, end, etime; /* //for trajectory timing */
-      
+
       llr_fixed_a_update();
-      
+
       //lprintf("MAIN",0,"Obs measure for fixed E=%f dE=%f a=%f T\n",getS0(),getdS(),get_llr_a());
        }
   }
@@ -234,14 +235,14 @@ int main(int argc,char *argv[]) {
   }
   gettimeofday(&endmain,0);
   timeval_subtract(&etimemain,&endmain,&startmain);
-  
+
   lprintf("MAIN",0,"Total simulation time =[%ld sec %ld usec]\n",etimemain.tv_sec,etimemain.tv_usec);
   /* finalize Monte Carlo */
   end_mc();
-  
+
   /* close communications */
   finalize_process();
-  
+
   return 0;
-  
+
 }

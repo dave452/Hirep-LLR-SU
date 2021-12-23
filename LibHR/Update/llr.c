@@ -36,7 +36,7 @@ typedef struct {
   double Smax;
 #endif
   int sfreq_fxa;
-  int sfreq_RM;
+  int nhb, nor;
 } llrparams;
 
 static llrparams llrp;
@@ -47,14 +47,15 @@ void restart_robbinsmonro(){
   llrp.a=llrp.starta;
 }
 
-void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa, double Smin, double Smax){
+void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_fxa, double Smin, double Smax, int nhb, int nor){
   llrp.nrm=nrm;
   llrp.nth=nth;
   llrp.it=it;
   llrp.starta=starta;
   llrp.dS=dS;
   llrp.S0=S0;
-  llrp.sfreq_RM = sfreq_RM;
+  llrp.nor = nor;
+  llrp.nhb = nhb;
   llrp.sfreq_fxa = sfreq_fxa;
 #ifdef LLRHB
   llrp.Smin = Smin;
@@ -100,7 +101,7 @@ void thermrobbinsmonro(void){
     Emax = 6*GLB_VOLUME;
   }
 #endif
-  update_constrained(llrp.a, 1,0, &(llrp.E),Emin,Emax);
+  update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
 #else
   double S_llr,S_non_llr;
   update_llr_ghmc(&S_llr,&S_non_llr,1);
@@ -171,7 +172,7 @@ void robbinsmonro(void){
     //lprintf("llr",30,"Therm: %d\n",rmstep);
 #ifdef LLRHB
   lprintf("llr",30,"Starting therm...\n");
-  update_constrained(llrp.a, 1,0, &(llrp.E),Emin, Emax);
+  update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin, Emax);
 #else
   update_llr_ghmc(&S_llr,&S_non_llr,1);
 #endif
@@ -187,7 +188,7 @@ void robbinsmonro(void){
 #endif
   for(rmstep=0;rmstep<llrp.nrm;rmstep++){
 #ifdef LLRHB
-    update_constrained(llrp.a, 1,0,&(llrp.E),Emin,Emax);
+    update_constrained(llrp.a, llrp.nhb,llrp.nor,&(llrp.E),Emin,Emax);
     avr += llrp.E;
 #ifdef LLRHB_UM_BC
     avr2 += llrp.E * llrp.E;
@@ -325,10 +326,10 @@ void swap(double *data){
   }
   if(drep[N_REP-1].var_llr != 0.){
  	drep[N_REP-1].a = drep[N_REP-2].a + (drep[N_REP-2].dS / (drep[N_REP-2].var_llr*2));
-	data[5*drep[N_REP-1].rep+2]=drep[N_REP-1].a;  
+	data[5*drep[N_REP-1].rep+2]=drep[N_REP-1].a;
   }
   if(drep[2].var_llr != 0.) lprintf("Boundary", 10, "a(1)_rm : %lf and a(1)_bc : %lf \n",drep[1].a,drep[2].a - (drep[2].dS / (drep[2].var_llr*2)));
-  if(drep[N_REP-3].var_llr != 0.) lprintf("Boundary", 10, "a(n-2)_rm : %lf and a(n-2)_bc : %lf \n",drep[N_REP-2].a,drep[N_REP-3].a + (drep[N_REP-3].dS /( drep[N_REP-3].var_llr*2)));  
+  if(drep[N_REP-3].var_llr != 0.) lprintf("Boundary", 10, "a(n-2)_rm : %lf and a(n-2)_bc : %lf \n",drep[N_REP-2].a,drep[N_REP-3].a + (drep[N_REP-3].dS /( drep[N_REP-3].var_llr*2)));
 #endif
   for(i=0;i<N_REP-1;i++){
     drep[i].repnext=drep[i+1].rep;
