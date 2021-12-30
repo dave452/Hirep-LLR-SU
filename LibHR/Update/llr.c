@@ -93,7 +93,7 @@ void thermrobbinsmonro(void){
   double Emin, Emax;
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
-#ifdef WITH_UMBRELLA
+#ifdef LLRHB_UM_BC
   if(llrp.S0 == llrp.Smin){
     Emin = 0;
   }
@@ -113,7 +113,7 @@ void llr_fixed_a_update(void){
   double Emin, Emax;
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
-#ifdef WITH_UMBRELLA
+#ifdef LLRHB_UM_BC
   if(llrp.S0 == llrp.Smin){
     Emin = 0;
   }
@@ -122,7 +122,7 @@ void llr_fixed_a_update(void){
   }
 #endif
   for( int i=0; i<llrp.sfreq_fxa ; i++) {
-	update_constrained(llrp.a, 1,0, &(llrp.E),Emin,Emax);
+	update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
     	lprintf("ROBBINSMONRO",10,"Fixed a MC Step: %d E=%lf \n",i,llrp.E);
 	polyakov();
 	}
@@ -154,7 +154,7 @@ void robbinsmonro(void){
   double Emin, Emax;
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
-#ifdef WITH_UMBRELLA
+#ifdef LLRHB_UM_BC
   if(llrp.S0 == llrp.Smin){
     Emin = 0;
   }
@@ -321,15 +321,15 @@ void swap(double *data){
   //sorting with respect of the difference in hamiltonian between r and r+1 where r is the replica
 #ifdef LLRHB_UM_BC
   if(drep[1].var_llr != 0.){
-	drep[0].a = drep[1].a - (drep[1].dS / (drep[1].var_llr*2));
+	drep[0].a = 2*drep[1].a - drep[2].a;
 	data[5*drep[0].rep+2]=drep[0].a;
   }
   if(drep[N_REP-1].var_llr != 0.){
- 	drep[N_REP-1].a = drep[N_REP-2].a + (drep[N_REP-2].dS / (drep[N_REP-2].var_llr*2));
+ 	drep[N_REP-1].a = 2*drep[N_REP-2].a - drep[N_REP-3].a;
 	data[5*drep[N_REP-1].rep+2]=drep[N_REP-1].a;
   }
-  if(drep[2].var_llr != 0.) lprintf("Boundary", 10, "a(1)_rm : %lf and a(1)_bc : %lf \n",drep[1].a,drep[2].a - (drep[2].dS / (drep[2].var_llr*2)));
-  if(drep[N_REP-3].var_llr != 0.) lprintf("Boundary", 10, "a(n-2)_rm : %lf and a(n-2)_bc : %lf \n",drep[N_REP-2].a,drep[N_REP-3].a + (drep[N_REP-3].dS /( drep[N_REP-3].var_llr*2)));
+  if(drep[2].var_llr != 0.) lprintf("Boundary", 10, "a(1)_rm : %lf and a(1)_bc : %lf \n",drep[1].a,2*drep[2].a - drep[3].a);
+  if(drep[N_REP-3].var_llr != 0.) lprintf("Boundary", 10, "a(n-2)_rm : %lf and a(n-2)_bc : %lf \n",drep[N_REP-2].a,2*drep[N_REP-3].a - drep[N_REP-4].a);
 #endif
   for(i=0;i<N_REP-1;i++){
     drep[i].repnext=drep[i+1].rep;
