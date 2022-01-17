@@ -640,7 +640,6 @@ void start_gt_sendrecv(suNg_field *gf) {
 
 
 #ifdef WITH_UMBRELLA
-#ifndef LLRHB_UM_BC
 void umbrella_swap(double* S_llr,double* S0, double* a, double* dS)
 {
 
@@ -688,54 +687,4 @@ void umbrella_swap(double* S_llr,double* S0, double* a, double* dS)
   lprintf("SWAP",10,"New Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
 
 }
-#else
-void umbrella_swap(double* S_llr,double* S0, double* a, double* dS, double* var_llr)
-{
-
-
-  int mpiret; (void)mpiret;
-
-  lprintf("SWAP",10,"Starting Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
-
-  /*wait on every processor*/
-  mpiret=MPI_Barrier(MPI_COMM_WORLD);
-  double data[5*N_REP];
-  double locdata[5];
-
-  locdata[0]=*S_llr;
-  locdata[1]=*S0;
-  locdata[2]=*a;
-  locdata[3]=*dS;
-  locdata[4]=*var_llr;
-  if(PID==0) {
-    mpiret=MPI_Gather(locdata,5,MPI_DOUBLE,data,5,MPI_DOUBLE,0,UMB_WORLD);
-#ifndef NDEBUG
-    if (mpiret != MPI_SUCCESS) {
-      char mesg[MPI_MAX_ERROR_STRING];
-      int mesglen;
-      MPI_Error_string(mpiret,mesg,&mesglen);
-      lprintf("MPI",0,"ERROR: %s\n",mesg);
-      error(1,1,"umbrella_swap " __FILE__,"Cannot complete gather");
-    }
-#endif
-    if(UID==0) swap(data);
-    mpiret=MPI_Scatter(data,5,MPI_DOUBLE,locdata,5,MPI_DOUBLE,0,UMB_WORLD);
-#ifndef NDEBUG
-    if (mpiret != MPI_SUCCESS) {
-      char mesg[MPI_MAX_ERROR_STRING];
-      int mesglen;
-      MPI_Error_string(mpiret,mesg,&mesglen);
-      lprintf("MPI",0,"ERROR: %s\n",mesg);
-      error(1,1,"umbrella_swap " __FILE__,"Cannot complete scatter");
-    }
-#endif
-
-  }
-  bcast(locdata,5);
-  setreplica(locdata);
-
-  lprintf("SWAP",10,"New Rep Par S0 = %f dS = %f a = %f \n",*S0,*dS,*a);
-
-}
-#endif
 #endif //WITH_UMBRELLA

@@ -128,12 +128,7 @@ void llr_fixed_a_update(void){
 	}
 #ifdef WITH_UMBRELLA
   lprintf("ROBBINSMONRO",10,"Fixed a Swap : %d E=%lf \n",llrp.E);
-#ifndef LLRHB_UM_BC
   umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
-#else
-  double var_llr = 0.;
-  umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS, &var_llr);
-#endif
 #endif
 #else
   double S_llr,S_non_llr;
@@ -183,16 +178,10 @@ void robbinsmonro(void){
 
 
   double avr=0.;
-#ifdef LLRHB_UM_BC
-  double avr2 = 0.;
-#endif
   for(rmstep=0;rmstep<llrp.nrm;rmstep++){
 #ifdef LLRHB
     update_constrained(llrp.a, llrp.nhb,llrp.nor,&(llrp.E),Emin,Emax);
     avr += llrp.E;
-#ifdef LLRHB_UM_BC
-    avr2 += (llrp.E * llrp.E);
-#endif
     //lprintf("ROBBINSMONRO",10,"RM Step: %d GMC Iter: %d E=%lf \n",llrp.it,rmstep,llrp.E);
     //if( rmstep%100 ==0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
 #else
@@ -205,10 +194,6 @@ void robbinsmonro(void){
   }
 
   avr/=(double)llrp.nrm;
-#ifdef LLRHB_UM_BC
-  avr2 /= (double)llrp.nrm;
-  double llr_var = avr2 - avr*avr;
-#endif
 #ifdef WITH_UMBRELLA
   if((llrp.S0 == llrp.Smin)||(llrp.S0 == llrp.Smax)){
     lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it));
@@ -224,12 +209,8 @@ void robbinsmonro(void){
 #endif
 #ifdef WITH_UMBRELLA
 #ifdef LLRHB
-#ifdef LLRHB_UM_BC
-  umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS, &(llr_var));
-#else
   //lprintf("ROBBINSMONRO",10,"Emin=%lf E=%lf Emax = %lf\n",Emin,llrp.E,Emax);
   umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
-#endif
  // if( rmstep%100 ==0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
 #else
   umbrella_swap(&S_llr,&llrp.S0,&llrp.a,&llrp.dS);
@@ -241,9 +222,6 @@ void robbinsmonro(void){
 
 typedef struct{
   double S_llr;
-#ifdef LLRHB_UM_BC
-  double var_llr;
-#endif
   double dS;
   double S0;
   double a;
@@ -298,16 +276,6 @@ void swap(double *data){
 #endif
 
   //sorting the replicas with respect of their energy  S0 so we can swap nearest neighbourgh
-#ifdef LLRHB_UM_BC
-  for(i=0;i<N_REP;i++){
-    drep[i].S_llr=data[5*i];
-    drep[i].S0=data[5*i+1];
-    drep[i].a=data[5*i+2];
-    drep[i].dS=data[5*i+3];
-    drep[i].var_llr=data[5*i+4];
-    drep[i].rep=i;
-  }
-#else
   for(i=0;i<N_REP;i++){
     drep[i].S_llr=data[4*i];
     drep[i].S0=data[4*i+1];
@@ -315,21 +283,16 @@ void swap(double *data){
     drep[i].dS=data[4*i+3];
     drep[i].rep=i;
   }
-#endif
   qsort(drep,N_REP,sizeof(drep[0]),compare_S0);
 
   //sorting with respect of the difference in hamiltonian between r and r+1 where r is the replica
 #ifdef LLRHB_UM_BC
-  if(drep[1].var_llr != 0.){
 	drep[0].a = 2*drep[1].a - drep[2].a;
-	data[5*drep[0].rep+2]=drep[0].a;
-  }
-  if(drep[N_REP-1].var_llr != 0.){
+	data[4*drep[0].rep+2]=drep[0].a;
  	drep[N_REP-1].a = 2*drep[N_REP-2].a - drep[N_REP-3].a;
-	data[5*drep[N_REP-1].rep+2]=drep[N_REP-1].a;
-  }
-  if(drep[2].var_llr != 0.) lprintf("Boundary", 10, "a(1)_rm : %lf and a(1)_bc : %lf \n",drep[1].a,2*drep[2].a - drep[3].a);
-  if(drep[N_REP-3].var_llr != 0.) lprintf("Boundary", 10, "a(n-2)_rm : %lf and a(n-2)_bc : %lf \n",drep[N_REP-2].a,2*drep[N_REP-3].a - drep[N_REP-4].a);
+	data[4*drep[N_REP-1].rep+2]=drep[N_REP-1].a;
+  	lprintf("Boundary", 10, "a(1)_rm : %lf and a(1)_bc : %lf \n",drep[1].a,2*drep[2].a - drep[3].a);
+  	lprintf("Boundary", 10, "a(n-2)_rm : %lf and a(n-2)_bc : %lf \n",drep[N_REP-2].a,2*drep[N_REP-3].a - drep[N_REP-4].a);
 #endif
   for(i=0;i<N_REP-1;i++){
     drep[i].repnext=drep[i+1].rep;
@@ -376,17 +339,10 @@ void swap(double *data){
       toswap[drep[i].repnext]=0;
 #endif
       if(drep[i].deltaS<0){
-#ifndef LLRHB_UM_BC
 	for(j=0;j<4;j++){
 	  temp=data[4*drep[i].rep+j];
           data[4*drep[i].rep+j]=data[4*drep[i].repnext+j];
           data[4*drep[i].repnext+j]=temp;
-#else
-for(j=0;j<5;j++){
-  temp=data[5*drep[i].rep+j];
-        data[5*drep[i].rep+j]=data[5*drep[i].repnext+j];
-        data[5*drep[i].repnext+j]=temp;
-#endif
 	//lprintf("SWAP",10,"Replica %d with Emin E Emax a : %f, %f, %f, %f\n",drep[i].rep,drep[i].S0-0.5*drep[i].dS,drep[i].S_llr,drep[i].S0-0.5*drep[i].dS,drep[i].a);
 	}
 //	lprintf("SWAP", 10, "Replicas %d and %d swapped!\n",drep[i].rep,drep[i].repnext);
@@ -394,19 +350,11 @@ for(j=0;j<5;j++){
       }else{
 	ranlxd(&rand,1);
 	if(rand < exp(-drep[i].deltaS)){
-#ifndef LLRHB_UM_BC
 	  for(j=0;j<4;j++){
             temp=data[4*drep[i].rep+j];
 	    data[4*drep[i].rep+j]=data[4*drep[i].repnext+j];
 	    data[4*drep[i].repnext+j]=temp;
 	  }
-#else
-  for(j=0;j<5;j++){
-          temp=data[5*drep[i].rep+j];
-    data[5*drep[i].rep+j]=data[5*drep[i].repnext+j];
-    data[5*drep[i].repnext+j]=temp;
-  }
-#endif
 	lprintf("SWAP", 10, "Replicas %d and %d swapped!\n",drep[i].rep,drep[i].repnext);
 	}
       }
@@ -421,7 +369,6 @@ void setreplica(double *data){
   llrp.dS=data[3];
   llrp.a=data[2];
   lprintf("llr:setreplica",0,"New LLR Param: S0 %lf,  a  %.9f , dS %lf  \n",llrp.S0,llrp.a,llrp.dS);
-
 }
 
 #endif
