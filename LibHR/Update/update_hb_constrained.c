@@ -1,6 +1,6 @@
 /*************************************************************************** \
- * Copyright (c) 2008, Claudio Pica                                          *   
- * All rights reserved.                                                      * 
+ * Copyright (c) 2008, Claudio Pica                                          *
+ * All rights reserved.                                                      *
 \***************************************************************************/
 
 /*******************************************************************************
@@ -35,14 +35,14 @@ static int *dyn_gauge=NULL;
 //    project_to_suNg(pu_gauge(ix,2));
 //    project_to_suNg(pu_gauge(ix,3));
 //  }
-//  
+//
 //  start_gf_sendrecv(u_gauge);
-//} 
+//}
 
 #if defined(BASIC_SF) || defined(ROTATED_SF)
 static void g_up_Dirichlet_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == NP_T-1) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(T-1,ix,iy,iz);
@@ -55,7 +55,7 @@ static void g_up_Dirichlet_BCs() {
 #if defined(BASIC_SF) || defined(ROTATED_SF) || defined(BC_T_MIXED)
 static void g_dn_Dirichlet_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == 0) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(0,ix,iy,iz);
@@ -72,7 +72,7 @@ static void g_dn_Dirichlet_BCs() {
 #if defined(BC_T_OPEN) || defined(BC_T_MIXED)
 static void g_up_open_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == NP_T-1) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(T-1,ix,iy,iz);
@@ -82,10 +82,10 @@ static void g_up_open_BCs() {
 }
 #endif
 
-#if defined(BC_T_OPEN) 
+#if defined(BC_T_OPEN)
 static void g_dn_open_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == 0) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(0,ix,iy,iz);
@@ -105,7 +105,7 @@ static void free_hb_boundary() {
 static void init_hb_boundary() {
   dyn_gauge = malloc(sizeof(*dyn_gauge)*glattice.gsize_gauge*4);
   atexit(&free_hb_boundary); //register cleanup function at exit
-  
+
   for(int i=0;i<glattice.gsize_gauge*4;i++) dyn_gauge[i]=1;
 #if defined(BASIC_SF) || defined(ROTATED_SF)
   g_up_Dirichlet_BCs();
@@ -129,7 +129,7 @@ static void init_hb_boundary() {
 static void update_all(double beta,int type, double * S, double Smin, double Smax)
 {
   static int count=PROJECT_INTERVAL;
-  
+
   if (count>=PROJECT_INTERVAL) {
     project_gauge_field();
     count=0;
@@ -152,14 +152,14 @@ static void update_all(double beta,int type, double * S, double Smin, double Sma
         }
       }
     }
-  
-} 
+
+}
 
 
 void update_constrained(double beta,int nhb,int nor, double * S, double Smin, double Smax)
 {
   if(dyn_gauge==NULL ) init_hb_boundary();
-   
+
   //lprintf("MAIN", 10,"starting constrained update with a = %f\n", beta);
   for (int n=0;n<nhb;n++){
     //printf("update_all: E = %f, Emin= %f, Emax= %f\n", *S, Smin, Smax);
@@ -171,7 +171,7 @@ void update_constrained(double beta,int nhb,int nor, double * S, double Smin, do
  }
 
   start_gf_sendrecv(u_gauge);
- 
+
 }
 
 void anneal(double * S, double S0, double dS){
@@ -209,4 +209,3 @@ void anneal(double * S, double S0, double dS){
     }
   }
 }
-

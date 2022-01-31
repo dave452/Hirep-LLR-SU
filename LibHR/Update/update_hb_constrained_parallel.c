@@ -18,6 +18,7 @@
 #include "global.h"
 #include "update.h"
 #include "communications.h"
+#include "logger.h"
 #include "random.h"
 #include "observables.h"
 #define PI 3.141592653589793238462643383279502884197
@@ -212,12 +213,12 @@ void update_constrained_parallel(double beta,int nhb,int nor, double * S, double
       }
       MPI_Barrier(GLB_COMM);
       start_gf_sendrecv(u_gauge);
-      bcast_from_rank(S, 1, i)
+      bcast_from_rank(S, 1, i);
     }
   }
 
   for (int n=0;n<nor;n++){
-    update_all(beta,1,  S, Smin, Smax);
+    update_all_constrained(beta,1,  S, Smin, Smax);
   }
 
   start_gf_sendrecv(u_gauge);
@@ -309,25 +310,25 @@ _OMP_PRAGMA ( _omp_for )
 int anneal_parallel(double beta, double dbeta, double *S, double S0, double Smin, double Smax){
   if(dyn_gauge==NULL ) init_hb_boundary();
   int k = 1.;
-  double S_old = S;
-  while((S < Smin) ||  (S > Smax) || k < 10000){
+  double S_old = &S;
+  while((&S < Smin) ||  (&S > Smax) || k < 10000){
     if(k%10==0)
     {
-      if(((S_old - S0) > 0) && ((S - S0) < 0) || ((S_old - S0) < 0) && ((S - S0) > 0))
+      if(((S_old - S0) > 0) && ((&S - S0) < 0) || ((S_old - S0) < 0) && ((&S - S0) > 0))
       {
           dbeta /= 2.;
       }
-      if (S < S0)
+      if (&S < S0)
       {
-        beta += dbeta
+        beta += dbeta;
       }else{
-        beta -= dbeta
+        beta -= dbeta;
       }
 
-      S_old = S;
+      S_old = &S;
       lprintf("ANNEAL",0,"beta = %f, S =  %f ...\n", beta, S);
     }
-    update_all_anneal(beta);
+    update_all_anneal(beta, *S);
     k++;
   }
   if(k > 10000){
