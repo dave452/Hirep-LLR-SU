@@ -68,7 +68,7 @@ void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0,
   double db = 0.0003
   i = anneal_parallel(llrp.starta, db, &(llrp.E),  llrp.S0, llrp.Smin, llrp.Smax);
   if(i == 1){
-    exit();
+    exit(0);
   }
   lprintf("MAIN",0,"System brought to the interval (S0,dS) = (%f, %f)\n", llrp.S0, llrp.dS);
 	}
