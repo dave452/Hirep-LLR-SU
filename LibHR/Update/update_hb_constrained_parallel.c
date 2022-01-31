@@ -225,8 +225,39 @@ void update_constrained_parallel(double beta,int nhb,int nor, double * S, double
 
 }
 
+static void update_all_anneal(double beta,double * S)
+{
+  double Smin = 0.;
+  double Smax = GLB_VOLUME*6.;
+  static int count=PROJECT_INTERVAL;
+
+  if (count>=PROJECT_INTERVAL) {
+    project_gauge_field();
+    count=0;
+  }
+  ++count;
+ //printf("boh= %d\n", glattice.local_master_pieces);
+ //printf("boh= %d\n", glattice.master_start[0]);
+ //printf("boh= %d\n", glattice.master_end[1]);
+    suNg v;
+//lprintf("MAIN",10,"Emin, Emax, E = %f, %f, %f\n", Smin, Smax, *S);
+    for(int mu=0;mu<4;mu++){
+      for(int i=0;i<glattice.local_master_pieces;i++) {
+        for(int j=glattice.master_start[i];j<=glattice.master_end[i];j++){
+          if(dyn_gauge[j*4+mu]!=0){
+            staples(j,mu,&v);
+	    //printf("E = %f, Emin= %f, Emax= %f, i=%d, j=%d\n", S,Smin,Smax,i,j);
+            cabmar_constrained(beta,pu_gauge(j,mu),&v,0, S,Smin , Smax);
+          }
+    //printf("E = %f, Emin= %f, Emax= %f\n", *S, Smin, Smax);
+        }
+      }
+    }
+
+}
 
 
+/*
 static void update_all_anneal(double beta, double *S)
 {
   double Smin = 0.;
@@ -304,17 +335,18 @@ _OMP_PRAGMA ( _omp_for )
   }
 
 }
-
+*/
 
 
 int anneal_parallel(double beta, double dbeta, double *S, double S0, double Smin, double Smax){
   if(dyn_gauge==NULL ) init_hb_boundary();
   int k = 1.;
   double S_old = &S;
-  while((&S < Smin) ||  (&S > Smax) || k < 10000){
+  lprintf("ANNEAL",0,"Finished S = %f, Smin = %f, Smax = %f ...\n",  S, Smin, Smax);
+  while(((*S < Smin) ||  (*S > Smax)) && k < 10000){
     if(k%10==0)
     {
-      if(((S_old - S0) > 0) && ((&S - S0) < 0) || ((S_old - S0) < 0) && ((&S - S0) > 0))
+      if(((S_old - S0) > 0) && ((*S - S0) < 0) || ((S_old - S0) < 0) && ((*S - S0) > 0))
       {
           dbeta /= 2.;
       }
@@ -335,6 +367,8 @@ int anneal_parallel(double beta, double dbeta, double *S, double S0, double Smin
     lprintf("ANNEAL",0,"Couldn't bring system to the interval beta = %f, S =  %f ...\n", beta, S);
     return 1;
   }
+  lprintf("ANNEAL",0,"Finished S = %f, Smin = %f, Smax = %f ...\n",  S, Smin, Smax);
+  MPI_Barrier(MPI_COMM_WORLD);
   start_gf_sendrecv(u_gauge);
   return 0;
 }
