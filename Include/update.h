@@ -18,6 +18,7 @@ void random_su2_constrained(double rho,double s[], double xmin, double xmax);
 
 void cabmar_constrained(double beta,suNg *u, suNg *v,int type, double * E, double Emin, double Emax);
 void update_constrained(double beta,int nhb,int nor, double *S, double Smin, double Smax);
+void update_constrained_parallel(double beta,int nhb,int nor, double *S, double Smin, double Smax);
 //void update_constrained(double beta,int nhb,int nor);
 void anneal(double *E, double S0, double dS);
 
@@ -319,7 +320,7 @@ double get_llr_a_hb(void);
 double getS0(void);
 double getS0_hb(void);
 void llr_fixed_a_update(void);
-int anneal_parallel(double beta, double dbeta, double *S, double S0, double Smin, double Smax);
+int anneal_parallel(double beta, double dbeta, double *S, double S0, double dS);
 #ifdef WITH_UMBRELLA
 void swap(double *data);
 //void swap_hb(double *data);

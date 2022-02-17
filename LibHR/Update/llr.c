@@ -65,11 +65,15 @@ void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0,
   lprintf("MAIN",0,"Bringing the system to the interval (S0,dS) = (%f, %f) ...\n", llrp.S0, llrp.dS);
   int i;
   //anneal(&(llrp.E), llrp.S0, llrp.dS);
-  double db = 0.0003
-  i = anneal_parallel(llrp.starta, db, &(llrp.E),  llrp.S0, llrp.Smin, llrp.Smax);
+#ifdef LLRHBPARALLEL
+  double db = 0.0003;
+  i = anneal_parallel(llrp.starta, db, &(llrp.E),  llrp.S0, llrp.dS);
   if(i == 1){
     exit(0);
   }
+#else
+  anneal(&(llrp.E), llrp.S0, llrp.dS);
+#endif
   lprintf("MAIN",0,"System brought to the interval (S0,dS) = (%f, %f)\n", llrp.S0, llrp.dS);
 	}
 #endif
@@ -107,10 +111,16 @@ void thermrobbinsmonro(void){
     Emax = 6*GLB_VOLUME;
   }
 #endif
-  update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#ifdef LLRHBPARALLEL
+        update_constrained_parallel(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#else
+        update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#endif
 #else
   double S_llr,S_non_llr;
   update_llr_ghmc(&S_llr,&S_non_llr,1);
+  lprintf("Action",0,"S_llr = %f, S_avrplaq = %f \n",llrp.E, avr_plaquette()*GLB_VOLUME*6.);
+
 #endif
 }
 
@@ -128,7 +138,11 @@ void llr_fixed_a_update(void){
   }
 #endif
   for( int i=0; i<llrp.sfreq_fxa ; i++) {
-	update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#ifdef LLRHBPARALLEL
+	update_constrained_parallel(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#else
+        update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#endif
     	lprintf("ROBBINSMONRO",10,"Fixed a MC Step: %d E=%lf \n",i,llrp.E);
 	polyakov();
 	}
@@ -173,7 +187,11 @@ void robbinsmonro(void){
     //lprintf("llr",30,"Therm: %d\n",rmstep);
 #ifdef LLRHB
   lprintf("llr",30,"Starting therm...\n");
-  update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin, Emax);
+#ifdef LLRHBPARALLEL
+        update_constrained_parallel(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#else
+        update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#endif
 #else
   update_llr_ghmc(&S_llr,&S_non_llr,1);
 #endif
@@ -186,7 +204,11 @@ void robbinsmonro(void){
   double avr=0.;
   for(rmstep=0;rmstep<llrp.nrm;rmstep++){
 #ifdef LLRHB
-    update_constrained(llrp.a, llrp.nhb,llrp.nor,&(llrp.E),Emin,Emax);
+#ifdef LLRHBPARALLEL
+        update_constrained_parallel(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#else
+        update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
+#endif
     avr += llrp.E;
     //lprintf("ROBBINSMONRO",10,"RM Step: %d GMC Iter: %d E=%lf \n",llrp.it,rmstep,llrp.E);
     //if( rmstep%100 ==0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
@@ -223,6 +245,8 @@ void robbinsmonro(void){
 #endif
 #endif
   llrp.it++;
+  lprintf("Action",0,"S_llr = %f, S_avrplaq = %f \n",llrp.E, avr_plaquette()*GLB_VOLUME*6.);
+
 }
 
 
@@ -249,7 +273,6 @@ static int compare_S0(const void *p, const void *q) {
     return -1;  // Return -1 if you want ascending, 1 if you want descending order.
   else if (x.S0 > y.S0 )
     return 1;   // Return 1 if you want ascending, -1 if you want descending order.
-
   return 0;
 }
 
