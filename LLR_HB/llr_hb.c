@@ -123,20 +123,21 @@ int main(int argc,char *argv[]) {
 
   lprintf("MAIN",0,"Compiled with macros: %s\n",MACROS);
   lprintf("MAIN",0,"[RepID: %d][world_size: %d]\n[MPI_ID: %d][MPI_size: %d]\n",RID,WORLD_SIZE,MPI_PID,MPI_WORLD_SIZE);
-  lprintf("MAIN",0,"SVN Revision: %d\n", CI_svnrevision);
-
+  
   lprintf("MAIN",0,"Logger lelvel: %d\n",logger_getlevel(0));
 
   /* setup lattice geometry */
   if (geometry_init() == 1) { finalize_process(); return 0; }
   geometry_mpi_eo();
   /* test_geometry_mpi_eo(); */
+  
+
 
   /* setup random numbers */
   read_input(rlx_var.read,input_filename);
   lprintf("MAIN",0,"RLXD [%d,%d]\n",rlx_var.rlxd_level,rlx_var.rlxd_seed+MPI_PID);
   rlxd_init(rlx_var.rlxd_level,rlx_var.rlxd_seed+MPI_PID); /* use unique MPI_PID to shift seeds */
-
+  
   if(strcmp(rlx_var.rlxd_start,"continue")==0 && rlx_var.rlxd_state[0]!='\0')
   {
     /*load saved state*/

@@ -116,11 +116,10 @@ void thermrobbinsmonro(void){
 #else
         update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
 #endif
+
 #else
   double S_llr,S_non_llr;
   update_llr_ghmc(&S_llr,&S_non_llr,1);
-  lprintf("Action",0,"S_llr = %f, S_avrplaq = %f \n",llrp.E, avr_plaquette()*GLB_VOLUME*6.);
-
 #endif
 }
 
