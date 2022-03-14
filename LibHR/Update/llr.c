@@ -104,10 +104,11 @@ void thermrobbinsmonro(void){
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
 #ifdef LLRHB_UM_BC
-  if(llrp.S0 == llrp.Smin){
+  double epsilon = 0.000001;
+  if(fabs(llrp.S0 - llrp.Smin) < epsilon){
     Emin = 0;
   }
-  if(llrp.S0 == llrp.Smax){
+  if(fabs(llrp.S0 - llrp.Smax) < epsilon){
     Emax = 6*GLB_VOLUME;
   }
 #endif
@@ -129,10 +130,11 @@ void llr_fixed_a_update(void){
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
 #ifdef LLRHB_UM_BC
-  if(llrp.S0 == llrp.Smin){
+  double epsilon = 0.000001;
+  if(fabs(llrp.S0 - llrp.Smin) < epsilon){
     Emin = 0;
   }
-  if(llrp.S0 == llrp.Smax){
+  if(fabs(llrp.S0 - llrp.Smax) < epsilon){
     Emax = 6*GLB_VOLUME;
   }
 #endif
@@ -169,10 +171,11 @@ void robbinsmonro(void){
   Emin = llrp.S0 - .5*llrp.dS;
   Emax = llrp.S0 + .5*llrp.dS;
 #ifdef LLRHB_UM_BC
-  if(llrp.S0 == llrp.Smin){
+  double epsilon = 0.000001;
+  if(fabs(llrp.S0 - llrp.Smin) < epsilon){
     Emin = 0;
   }
-  if(llrp.S0 == llrp.Smax){
+  if(fabs(llrp.S0 - llrp.Smax) < epsilon){
     Emax = 6*GLB_VOLUME;
   }
 #endif
@@ -180,7 +183,7 @@ void robbinsmonro(void){
   double S_llr;
   double S_non_llr;
 #endif
-
+ //lprintf("llr",0,"Energy range Emin: %f, Emax: %f \n", Emin, Emax);
 
   for(rmstep=0;rmstep<llrp.nth;rmstep++){
     //lprintf("llr",30,"Therm: %d\n",rmstep);
@@ -244,8 +247,8 @@ void robbinsmonro(void){
 #endif
 #endif
   llrp.it++;
-  lprintf("Action",0,"S_llr = %f, S_avrplaq = %f \n",llrp.E, avr_plaquette()*GLB_VOLUME*6.);
-
+  //lprintf("Action",0,"S_llr = %f, S_avrplaq = %f \n",llrp.E, avr_plaquette()*GLB_VOLUME*6.);
+  llrp.E = avr_plaquette()*GLB_VOLUME*6.; 
 }
 
 

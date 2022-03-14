@@ -139,7 +139,7 @@ static void update_all_constrained_nomp(double beta,int type, double * S, double
      for(int j=glat_even.master_start[0];j<=glat_even.master_end[0];j++){
           if(dyn_gauge[j*4+mu]!=0){
             staples(j,mu,&v);
-            //printf("E = %f, Emin= %f, Emax= %f, i=%d, j=%d\n", S,Smin,Smax,i,j);
+            //printf("E = %f, Emin= %f, Emax= %f, i=%d, j=%d\n", S,);
             cabmar_constrained(beta,pu_gauge(j,mu),&v,type, S,Smin , Smax);
           }
      }
@@ -157,7 +157,8 @@ static void update_all_constrained_nomp(double beta,int type, double * S, double
         }
       }
     }//mu
-    for(int mu=0;mu<4;mu++){
+    
+   for(int mu=0;mu<4;mu++){
 #ifdef WITH_MPI
         start_gf_sendrecv(u_gauge);
         MPI_Barrier(GLB_COMM);
@@ -305,21 +306,24 @@ void update_constrained_parallel(double beta,int nhb,int nor, double * S, double
      init_hb_boundary();
      lprintf("DYN_GAUGE",0,"Shouldn't be here");
   }   
-
+  //lprintf("Action",0,"%.16f\n",  *S - avr_plaquette()*GLB_VOLUME*6.);
   for (int n=0;n<nhb;n++){
     for (int i = 0; i<CART_SIZE;i++){
       update_all_constrained_nomp(beta,(CID == i)? 0: 1,  S, Smin, Smax);
       bcast_from_rank(S, 1, i);
-      MPI_Barrier(GLB_COMM);
       start_gf_sendrecv(u_gauge);
+      MPI_Barrier(GLB_COMM);
+      //lprintf("Action",0,"(n=%d,i=%d) S_an = %.16f, S_ap = %.16f ", n,i, *S, avr_plaquette()*GLB_VOLUME*6.);
     }
   }
-
   for (int n=0;n<nor;n++){
     update_all_constrained_nomp(beta,1,  S, Smin, Smax);
+    start_gf_sendrecv(u_gauge);
+    MPI_Barrier(GLB_COMM);
   }
+  complete_gf_sendrecv(u_gauge);
   MPI_Barrier(GLB_COMM);
-  start_gf_sendrecv(u_gauge);
+  //lprintf("Action",0,"End update_constrained_parallel S_an = %f, S_ap = %f",  *S, avr_plaquette()*GLB_VOLUME*6.);
 
 }
 
@@ -350,6 +354,7 @@ int anneal_parallel(double beta, double dbeta, double *S, double S0, double dS){
       //lprintf("ANNEAL",0,"beta = %f, S =  %f, %d ...\n", beta, S_old, k);
     }
 //    update_all_anneal(beta, S);
+    //lprintf("Action",0,"%.16f\n",  *S - avr_plaquette()*GLB_VOLUME*6.);
     for (int i = 0; i<CART_SIZE;i++){
       //lprintf("ANNEAL",0,"CID = %d, S = %f, /n", CID, *S);
       if(CID == i)
@@ -365,8 +370,6 @@ int anneal_parallel(double beta, double dbeta, double *S, double S0, double dS){
       //lprintf("ANNEAL",0,"CID = %d, S = %f, /n", CID, *S);
       //lprintf("ANNEAL",0,"%d, CID=%d, Avr_plaquette = %f,S=%f \n", k, i,avr_plaquette()*GLB_VOLUME*6., *S);
       start_gf_sendrecv(u_gauge);
-      lprintf("ANNEAL",0,"%d, Avr_plaquette = %f,S=%f \n", k, i,avr_plaquette()*GLB_VOLUME*6., *S);
-
     }
     k++;
   }
@@ -376,7 +379,8 @@ int anneal_parallel(double beta, double dbeta, double *S, double S0, double dS){
     return 1;
   }
   lprintf("ANNEAL",0,"Finished S = %f, Smin = %f, Smax = %f, in %d steps ...\n",  *S, Emin, Emax, k);
-  lprintf("ANNEAL",0,"Check action S_an = %f, S_ap = %f",  *S, avr_plaquette()*GLB_VOLUME*6.);
+  lprintf("ANNEAL",0,"Check action S_an = %.16f, S_ap = %.16f",  *S, avr_plaquette()*GLB_VOLUME*6.);
+  complete_gf_sendrecv(u_gauge);
   MPI_Barrier(MPI_COMM_WORLD);
   return 0;
 }

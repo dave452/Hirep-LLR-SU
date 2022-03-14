@@ -169,9 +169,25 @@ int main(int argc,char *argv[]) {
   lprintf("MAIN",0,"LLR Smin minimum action for all replicas %f\n",llr_var.Smin);
   lprintf("MAIN",0,"LLR Smax maximum action for all replicas %f\n",llr_var.Smax);
   lprintf("MAIN",0,"LLR Delta S %f\n",llr_var.dS);
+
+#ifdef LLRHBPARALLEL
+  lprintf("MAIN",0,"Compiled with domain decomposition \n");
+#else
+  lprintf("MAIN",0,"Compiled without domain decomposition \n");
+#endif
 /* Init Monte Carlo */
 
   init_mc(&flow, input_filename);
+  if(flow.start < llr_var.it)
+  {
+      flow.end = llr_var.it + (flow.end - flow.start);
+      flow.start = llr_var.it;
+  }
+  else
+  {
+      llr_var.it = flow.start;
+      
+  }
   //lprintf("MAIN",0,"MVM during HMC initialzation: %ld\n",getMVM());
   lprintf("MAIN",0,"Initial plaquette: %1.8e\n",avr_plaquette());
 
@@ -182,8 +198,9 @@ int main(int argc,char *argv[]) {
   //}
 
   //double E = avr_plaquette()*GLB_VOLUME*6.;
+  
   init_robbinsmonro(llr_var.nmc,llr_var.nth,llr_var.starta,llr_var.it,llr_var.dS,llr_var.S0,llr_var.sfreq_fxa, llr_var.Smin, llr_var.Smax,llr_var.nhb,llr_var.nor);
-
+  
 
   for(int j=0;j<flow.rmrestart;++j) {
 
@@ -204,9 +221,9 @@ int main(int argc,char *argv[]) {
     timeval_subtract(&etime,&end,&start);
     lprintf("MAIN",0,"Thermalization done in [%ld sec %ld usec].\n", etime.tv_sec, etime.tv_usec);
 
-
+    lprintf("MAIN", 0, "flow.start: %d, flow.end: %d, llr_var.it: %d", flow.start,flow.end, llr_var.it);
     for(i=flow.start;i<flow.end;++i) {
-
+      
       struct timeval start, end, etime; /* //for trajectory timing */
       lprintf("MAIN",0,"Trajectory #%d...\n",i);
       gettimeofday(&start,0);
