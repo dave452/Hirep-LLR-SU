@@ -26,6 +26,7 @@ int initHB = 0;
 typedef struct {
   int nrm,nth;
   int it;
+  int it_freq;
   double starta;
   double a;
   double S0;
@@ -47,7 +48,7 @@ void restart_robbinsmonro(){
   llrp.a=llrp.starta;
 }
 
-void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_fxa, double Smin, double Smax, int nhb, int nor){
+void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_fxa, double Smin, double Smax, int nhb, int nor, int it_freq){
   llrp.nrm=nrm;
   llrp.nth=nth;
   llrp.it=it;
@@ -57,6 +58,7 @@ void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0,
   llrp.nor = nor;
   llrp.nhb = nhb;
   llrp.sfreq_fxa = sfreq_fxa;
+  llrp.it_freq = it_freq;
 #ifdef LLRHB
   llrp.Smin = Smin;
   llrp.Smax = Smax;
@@ -161,7 +163,40 @@ void llr_fixed_a_update(void){
 
 }
 
-
+void newtonraphson(void){
+  int rmstep;
+#ifdef LLRHB
+  double Emin, Emax;
+  Emin = llrp.S0 - .5*llrp.dS;
+  Emax = llrp.S0 + .5*llrp.dS;
+#endif
+  for(rmstep=0;rmstep<llrp.nth;rmstep++){
+#ifdef LLRHB
+  lprintf("llr",30,"Starting therm...\n");
+  update_constrained(llrp.a, 1,0, &(llrp.E),Emin, Emax);
+#endif
+  }
+  double avr=0.;
+  double avr_sq = 0.;
+  for(rmstep=0;rmstep<llrp.nrm;rmstep++){
+#ifdef LLRHB
+    update_constrained(llrp.a, 1,0,&(llrp.E),Emin,Emax);
+    avr += llrp.E;
+    avr_sq += llrp.E * llrp.E;
+#endif
+  }
+  avr/=(double)llrp.nrm;
+  avr_sq /=(double)llrp.nrm;
+  lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,(avr-llrp.S0)*12./(llrp.dS*llrp.dS) );
+  lprintf("ROBBINSMONRO",10,"RM var(S0): %lf \n",avr_sq - (avr*avr));
+  llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS);
+#ifdef WITH_UMBRELLA
+#ifdef LLRHB
+  if( llrp.it%2 == 0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
+#endif
+#endif
+  llrp.it++;
+}
 
 void robbinsmonro(void){
 
@@ -204,6 +239,7 @@ void robbinsmonro(void){
 
 
   double avr=0.;
+  double avr_sq= 0.;
   for(rmstep=0;rmstep<llrp.nrm;rmstep++){
 #ifdef LLRHB
 #ifdef LLRHBPARALLEL
@@ -212,11 +248,14 @@ void robbinsmonro(void){
         update_constrained(llrp.a, llrp.nhb,llrp.nor, &(llrp.E),Emin,Emax);
 #endif
     avr += llrp.E;
+    avr_sq += (llrp.E * llrp.E);
     //lprintf("ROBBINSMONRO",10,"RM Step: %d GMC Iter: %d E=%lf \n",llrp.it,rmstep,llrp.E);
     //if( rmstep%100 ==0 ) umbrella_swap(&(llrp.E),&llrp.S0,&llrp.a,&llrp.dS);
 #else
     update_llr_ghmc(&S_llr,&S_non_llr,0);
     avr+=S_llr;
+    avr_sq += (S_llr * S_llr);
+
     //if( rmstep%100 ==0 ) umbrella_swap(&S_llr,&llrp.S0,&llrp.a,&llrp.dS);
     //lprintf("ROBBINSMONRO",10,"RM Step: %d GMC Iter: %d S_llr=%lf \n",llrp.it,rmstep,S_llr);
 #endif
@@ -224,18 +263,21 @@ void robbinsmonro(void){
   }
 
   avr/=(double)llrp.nrm;
+  avr_sq /= (double)llrp.nrm;
+  int n = llrp.it / llrp.it_freq;
 #ifdef WITH_UMBRELLA
+  lprintf("ROBBINSMONRO",10,"RM avr-S_sqrt: %lf \n",avr_sq);
   if((llrp.S0 == llrp.Smin)||(llrp.S0 == llrp.Smax)){
     lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it));
   }
   else{
     lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it) );
-    llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it);
+    llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS*n);
   }
 #else
   lprintf("ROBBINSMONRO",10,"RM avr-S0: %lf delta_a: %lf \n",avr-llrp.S0,(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it) );
   //llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS);
-  llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS*llrp.it);
+  llrp.a-=(avr-llrp.S0)*12./(llrp.dS*llrp.dS*n);
 #endif
 #ifdef WITH_UMBRELLA
 #ifdef LLRHB

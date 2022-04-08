@@ -13,20 +13,20 @@
 /*Functions added for constrained heathbath
  * and the related implementation of the LLR*/
 
-void random_su2_creutz(double rho,double s[]);
-void random_su2_constrained(double rho,double s[], double xmin, double xmax);
+//void random_su2_creutz(double rho,double s[]);
+//void random_su2_constrained(double rho,double s[], double xmin, double xmax);
 
-void cabmar_constrained(double beta,suNg *u, suNg *v,int type, double * E, double Emin, double Emax);
-void update_constrained(double beta,int nhb,int nor, double *S, double Smin, double Smax);
-void update_constrained_parallel(double beta,int nhb,int nor, double *S, double Smin, double Smax);
+//void cabmar_constrained(double beta,suNg *u, suNg *v,int type, double * E, double Emin, double Emax);
+//void update_constrained(double beta,int nhb,int nor, double *S, double Smin, double Smax);
+//void update_constrained_parallel(double beta,int nhb,int nor, double *S, double Smin, double Smax);
 //void update_constrained(double beta,int nhb,int nor);
-void anneal(double *E, double S0, double dS);
+//void anneal(double *E, double S0, double dS);
 
-void thermrobbinsmonro_hb(void);
-void measrobbinsmonro_hb(void);
-void robbinsmonro_hb(void);
-void restart_robbinsmonro_hb();
-void init_robbinsmonro_hb(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa);
+//void thermrobbinsmonro_hb(void);
+//void measrobbinsmonro_hb(void);
+//void robbinsmonro_hb(void);
+//void restart_robbinsmonro_hb();
+//void init_robbinsmonro_hb(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa);
 /*================*/
 
 
@@ -308,12 +308,34 @@ void find_spec_H2(double *max, double *min);
 
 /* ROBBINS MONRO*/
 
+/*Functions added for constrained heathbath
+ * and the related implementation of the LLR*/
+
+void random_su2_creutz(double rho,double s[]);
+void random_su2_constrained(double rho,double s[], double xmin, double xmax);
+
+void cabmar_constrained(double beta,suNg *u, suNg *v,int type, double * E, double Emin, double Emax);
+void update_constrained(double beta,int nhb,int nor, double *S, double Smin, double Smax);
+void update_constrained_parallel(double beta,int nhb,int nor, double *S, double Smin, double Smax);
+//void update_constrained(double beta,int nhb,int nor);
+void anneal(double *E, double S0, double dS);
+
+void thermrobbinsmonro_hb(void);
+void measrobbinsmonro_hb(void);
+void robbinsmonro_hb(void);
+void restart_robbinsmonro_hb();
+//void init_robbinsmonro_hb(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_RM, int sfreq_fxa);
+
+
+
+
 void total_llr_action(double * S_llr);
 void thermrobbinsmonro(void);
 void measrobbinsmonro(void);
 void robbinsmonro(void);
+void newtonraphson(void);
 void restart_robbinsmonro();
-void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_fxa, double Smin, double Smax, int nhb, int nor);
+void init_robbinsmonro(int nrm,int nth,double starta,int it,double dS,double S0, int sfreq_fxa, double Smin, double Smax, int nhb, int nor, int it_freq);
 double getdS(void);
 double get_llr_a(void);
 double get_llr_a_hb(void);

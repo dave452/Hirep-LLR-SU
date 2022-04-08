@@ -36,10 +36,10 @@
 /* LLR parameters */
 typedef struct _input_llr {
   char make[256];
-  int nmc,nth,it, nfxa, sfreq_fxa, nhb, nor;
+  int nmc,nth,it, nfxa, sfreq_fxa, nhb, nor, it_freq;
   double starta,S0,dS, Smin, Smax;
   /* for the reading function */
-  input_record_t read[14];
+  input_record_t read[15];
 } input_llr;
 
 
@@ -58,7 +58,8 @@ typedef struct _input_llr {
     {"Number of fixed a steps ", "llr:nfxa = %d", INT_T, &((varname).nfxa)}, \
     {"Swap frequency for fixed a interations ", "llr:sfreq_fxa = %d", INT_T, &((varname).sfreq_fxa)}, \
     {"Number of heatbath steps per MC step ", "nhb = %d", INT_T, &((varname).nhb)}, \
-    {"Number of heatbath steps per MC step ", "nor = %d", INT_T, &((varname).nor)}, \
+    {"Number of over-relaxation steps per MC step ", "nor = %d", INT_T, &((varname).nor)}, \
+    {"Suppresion factor increment frequency ", "llr:it_freq = %d", INT_T, &((varname).it_freq)},  \
     {NULL, NULL, 0, NULL}				\
     }\
 }
@@ -160,7 +161,7 @@ int main(int argc,char *argv[]) {
   lprintf("MAIN",0,"LLR nunber of mc steps per RM: %d\n",llr_var.nmc);
   lprintf("MAIN",0,"LLR nunber of therm steps per RM %d\n",llr_var.nth);
   lprintf("MAIN",0,"LLR Initial a %f\n",llr_var.starta);
-  lprintf("MAIN",0,"LLR RM start value iteration %d\n",llr_var.it);
+  lprintf("MAIN",0,"LLR RM start value iteration %d and its iteration frequency %d \n",llr_var.it, llr_var.it_freq);
   lprintf("MAIN",0,"LLR S0 Central action %f\n",llr_var.S0);
   lprintf("MAIN",0,"LLR Delta S %f\n",llr_var.dS);
   lprintf("MAIN",0,"Number of heatbath steps %d, number of overrelaxation steps %d\n",llr_var.nhb,llr_var.nor);
@@ -199,7 +200,7 @@ int main(int argc,char *argv[]) {
 
   //double E = avr_plaquette()*GLB_VOLUME*6.;
   
-  init_robbinsmonro(llr_var.nmc,llr_var.nth,llr_var.starta,llr_var.it,llr_var.dS,llr_var.S0,llr_var.sfreq_fxa, llr_var.Smin, llr_var.Smax,llr_var.nhb,llr_var.nor);
+  init_robbinsmonro(llr_var.nmc,llr_var.nth,llr_var.starta,llr_var.it,llr_var.dS,llr_var.S0,llr_var.sfreq_fxa, llr_var.Smin, llr_var.Smax,llr_var.nhb,llr_var.nor, llr_var.it_freq);
   
 
   for(int j=0;j<flow.rmrestart;++j) {
