@@ -1,6 +1,6 @@
 /*************************************************************************** \
- * Copyright (c) 2008, Claudio Pica                                          *   
- * All rights reserved.                                                      * 
+ * Copyright (c) 2008, Claudio Pica                                          *
+ * All rights reserved.                                                      *
 \***************************************************************************/
 
 /*******************************************************************************
@@ -19,6 +19,7 @@
 #include "update.h"
 #include "communications.h"
 #include "random.h"
+#include "logger.h"
 #include "observables.h"
 #define PI 3.141592653589793238462643383279502884197
 #include <math.h>
@@ -35,14 +36,14 @@ static int *dyn_gauge=NULL;
 //    project_to_suNg(pu_gauge(ix,2));
 //    project_to_suNg(pu_gauge(ix,3));
 //  }
-//  
+//
 //  start_gf_sendrecv(u_gauge);
-//} 
+//}
 
 #if defined(BASIC_SF) || defined(ROTATED_SF)
 static void g_up_Dirichlet_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == NP_T-1) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(T-1,ix,iy,iz);
@@ -55,7 +56,7 @@ static void g_up_Dirichlet_BCs() {
 #if defined(BASIC_SF) || defined(ROTATED_SF) || defined(BC_T_MIXED)
 static void g_dn_Dirichlet_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == 0) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(0,ix,iy,iz);
@@ -72,7 +73,7 @@ static void g_dn_Dirichlet_BCs() {
 #if defined(BC_T_OPEN) || defined(BC_T_MIXED)
 static void g_up_open_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == NP_T-1) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(T-1,ix,iy,iz);
@@ -82,10 +83,10 @@ static void g_up_open_BCs() {
 }
 #endif
 
-#if defined(BC_T_OPEN) 
+#if defined(BC_T_OPEN)
 static void g_dn_open_BCs() {
   int ix,iy,iz,index;
-  
+
   if(COORD[0] == 0) {
     for (ix=0;ix<X;++ix) for (iy=0;iy<Y;++iy) for (iz=0;iz<Z;++iz){
 	  index=ipt(0,ix,iy,iz);
@@ -105,7 +106,7 @@ static void free_hb_boundary() {
 static void init_hb_boundary() {
   dyn_gauge = malloc(sizeof(*dyn_gauge)*glattice.gsize_gauge*4);
   atexit(&free_hb_boundary); //register cleanup function at exit
-  
+
   for(int i=0;i<glattice.gsize_gauge*4;i++) dyn_gauge[i]=1;
 #if defined(BASIC_SF) || defined(ROTATED_SF)
   g_up_Dirichlet_BCs();
@@ -134,32 +135,27 @@ static void update_all(double beta,int type, double * S, double Smin, double Sma
     project_gauge_field();
     count=0;
   }
-  ++count;
- //printf("boh= %d\n", glattice.local_master_pieces);
- //printf("boh= %d\n", glattice.master_start[0]);
- //printf("boh= %d\n", glattice.master_end[1]);
+    ++count;
     suNg v;
-//lprintf("MAIN",10,"Emin, Emax, E = %f, %f, %f\n", Smin, Smax, *S);
     for(int mu=0;mu<4;mu++){
       for(int i=0;i<glattice.local_master_pieces;i++) {
         for(int j=glattice.master_start[i];j<=glattice.master_end[i];j++){
           if(dyn_gauge[j*4+mu]!=0){
             staples(j,mu,&v);
-	    //printf("E = %f, Emin= %f, Emax= %f, i=%d, j=%d\n", S,Smin,Smax,i,j);
             cabmar_constrained(beta,pu_gauge(j,mu),&v,type, S,Smin , Smax);
           }
-    //printf("E = %f, Emin= %f, Emax= %f\n", *S, Smin, Smax);
         }
       }
     }
-  
-} 
+    //lprintf("Action",0,"%.13f",  *S - avr_plaquette()*GLB_VOLUME*6.);
+
+}
 
 
 void update_constrained(double beta,int nhb,int nor, double * S, double Smin, double Smax)
 {
   if(dyn_gauge==NULL ) init_hb_boundary();
-   
+  lprintf("Action",0,"%.16f\n",  *S - avr_plaquette()*GLB_VOLUME*6.);
   //lprintf("MAIN", 10,"starting constrained update with a = %f\n", beta);
   for (int n=0;n<nhb;n++){
     //printf("update_all: E = %f, Emin= %f, Emax= %f\n", *S, Smin, Smax);
@@ -169,9 +165,10 @@ void update_constrained(double beta,int nhb,int nor, double * S, double Smin, do
  for (int n=0;n<nor;n++){
    update_all(beta,1, S, Smin, Smax);
  }
-
+ //lprintf("Action",0,"After S_an = %.16f, S_ap = %.16f . ",  *S, avr_plaquette()*GLB_VOLUME*6.);
   start_gf_sendrecv(u_gauge);
- 
+  //lprintf("Action",0,"%.13f",  *S - avr_plaquette()*GLB_VOLUME*6.);
+
 }
 
 void anneal(double * S, double S0, double dS){
@@ -182,6 +179,7 @@ void anneal(double * S, double S0, double dS){
   double k;
   if(dyn_gauge==NULL ) init_hb_boundary();
   for(;;){
+  lprintf("Action",0,"%.16f\n",  *S - avr_plaquette()*GLB_VOLUME*6.);
   for(int mu=0;mu<4;mu++){
     for(int i=0;i<glattice.local_master_pieces;i++) {
       for(int j=glattice.master_start[i];j<=glattice.master_end[i] ;j++){
@@ -209,4 +207,3 @@ void anneal(double * S, double S0, double dS){
     }
   }
 }
-

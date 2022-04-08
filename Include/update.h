@@ -1,6 +1,6 @@
 /***************************************************************************\
-* Copyright (c) 2008, Agostino Patella, Claudio Pica                        *   
-* All rights reserved.                                                      * 
+* Copyright (c) 2008, Agostino Patella, Claudio Pica                        *
+* All rights reserved.                                                      *
 \***************************************************************************/
 
 #ifndef UPDATE_H
@@ -10,7 +10,7 @@
 #include "inverters.h"
 #include "rational_functions.h"
 
-/*Functions added for constrained heathbath 
+/*Functions added for constrained heathbath
  * and the related implementation of the LLR*/
 
 void random_su2_creutz(double rho,double s[]);
@@ -18,6 +18,7 @@ void random_su2_constrained(double rho,double s[], double xmin, double xmax);
 
 void cabmar_constrained(double beta,suNg *u, suNg *v,int type, double * E, double Emin, double Emax);
 void update_constrained(double beta,int nhb,int nor, double *S, double Smin, double Smax);
+void update_constrained_parallel(double beta,int nhb,int nor, double *S, double Smin, double Smax);
 //void update_constrained(double beta,int nhb,int nor);
 void anneal(double *E, double S0, double dS);
 
@@ -198,10 +199,10 @@ typedef struct _monomial_data {
 
 typedef struct _monomial {
   monomial_data data;
-  
+
   /* Functions */
   void (*free)(struct _monomial *m); /* free memory */
-  
+
   void (*force_f)(double dt, suNg_av_field *force, void *par); /* force function */
   void *force_par; /* parameters for the force function */
 
@@ -212,7 +213,7 @@ typedef struct _monomial {
   const spinor_field *(*pseudofermion)(const struct _monomial *m); /* returns ps field pointer */
   void (*add_local_action)(const struct _monomial *m, scalar_field *loc_action);
   void (*add_llr_local_action)(const struct _monomial *m, scalar_field *loc_action);
-  
+
 } monomial;
 
 struct _monomial* llr_obs_0pp_create(const monomial_data *data);
@@ -248,21 +249,21 @@ void O4MN_multistep(suNg_av_field *momenta, double tlen, integrator_par *int_par
 
 
 typedef struct _ghmc_par {
-  
+
   /* integrator */
   integrator_par *integrator;
   double tlen;
 
   /* Fermion Theta angles */
   double theta[4];
-  
+
   /* Probably not needed anymore */
   /* SF stuff */
   double SF_zf;
   double SF_ds;
   int SF_sign;
   double SF_ct;
-  
+
 } ghmc_par;
 
 void init_ghmc(ghmc_par *par);
@@ -319,7 +320,7 @@ double get_llr_a_hb(void);
 double getS0(void);
 double getS0_hb(void);
 void llr_fixed_a_update(void);
-
+int anneal_parallel(double beta, double dbeta, double *S, double S0, double dS);
 #ifdef WITH_UMBRELLA
 void swap(double *data);
 //void swap_hb(double *data);
