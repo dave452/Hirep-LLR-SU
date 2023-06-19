@@ -42,6 +42,10 @@ fi
 
 #E=$(head -n 1 $FILEA | cut -d' ' -f 1)
 #de=$(head -n 1 $FILEA | cut -d' ' -f 3)
+read -r -a stringarray <<< $(head -n 1 $FILEA)
+Emin=${stringarray[0]}
+read -r -a stringarray <<< $(tail -n 1 $FILEA)
+Emax=${stringarray[0]}
 
 i=0
 while read -r line
@@ -62,10 +66,14 @@ do
     echo "llr:S0 = $E" >> Rep_${i}/input_file                                                                                                                                                                         
     echo "llr:dS = ${de}" >> Rep_${i}/input_file                                                                                                                                                                      
     echo "llr:starta = ${A}" >> Rep_${i}/input_file
-    
+    sed -i "/llr:Smin =/d" Rep_${i}/input_file
+    echo "llr:Smin = ${Emin}" >> Rep_${i}/input_file
+    sed -i "/llr:Smax =/d" Rep_${i}/input_file
+    echo "llr:Smax = ${Emax}" >> Rep_${i}/input_file
     i=`echo "${i}+1"|bc -l`
 
 done < "$FILEA"
-
+mkdir CSV
+mkdir Figure
 
 
