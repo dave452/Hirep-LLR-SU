@@ -10,7 +10,9 @@
  * Update programs
  *
  *******************************************************************************/
-
+/**************************************
+Modified 2022 by David Mason and Davide Vadacchino
+***************************************/
 #define PROJECT_INTERVAL 10
 
 #include "suN.h"

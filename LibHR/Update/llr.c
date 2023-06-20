@@ -10,6 +10,9 @@
  * Update programs
  *
  *******************************************************************************/
+/**************************************
+Modified 2022 by David Mason and Davide Vadacchino
+***************************************/
 #include "suN.h"
 #include "utils.h"
 #include "global.h"

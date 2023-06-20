@@ -2,7 +2,9 @@
 * Copyright (c) 2008, Claudio Pica                                          *
 * All rights reserved.                                                      *
 \***************************************************************************/
-
+/**************************************
+Modified 2021 by David Mason and Davide Vadacchino 
+***************************************/
 #ifndef COMMUNICATIONS_H
 #define COMMUNICATIONS_H
 

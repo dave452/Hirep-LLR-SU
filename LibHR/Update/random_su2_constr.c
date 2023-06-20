@@ -10,7 +10,9 @@
 * Random SU(2) matrices functions
 *
 *******************************************************************************/
-
+/**************************************
+Modified 2021 by David Mason and Davide Vadacchino
+***************************************/
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

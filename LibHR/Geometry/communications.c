@@ -2,7 +2,9 @@
  * Copyright (c) 2008, Claudio Pica                                          *
  * All rights reserved.                                                      *
  \***************************************************************************/
-
+/**************************************
+Modified 2021 by David Mason and Davide Vadacchino
+***************************************/
 #include "global.h"
 #include "communications.h"
 #include "logger.h"
